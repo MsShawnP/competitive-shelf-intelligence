@@ -59,3 +59,41 @@ then /office-hours, /plan-ceo-review, /plan-eng-review before building.
 **Next:** Research and fill competitor product URLs in `config/products.yaml`. That is the only manual step blocking a first real scrape.
 
 ---
+
+## 2026-05-28 — Demo deployed and live at https://competitive-shelf-intelligence.fly.dev
+
+**Started from:** All IUs shipped, URLs filled, Fly Postgres provisioned.
+
+**Did:**
+- Provisioned Fly Postgres (`competitive-shelf-pg`), applied schema via psycopg2 proxy (no local psql)
+- Filled all competitor URLs in `config/products.yaml` (Yellowbird, Truff, Melinda's, Dave's Gourmet, Marie Sharp's)
+- Discovered Walmart and Amazon both block scrapes from Fly data center IPs regardless of browser type; camoufox (Firefox stealth) also blocked at the IP layer
+- Implemented camoufox + Google Shopping fallback in `src/scrapers/walmart.py`; camoufox works on Linux but fails on Windows (Microsoft Store Python UWP sandboxing); Google Shopping returns JS-only shell to plain requests → both fallbacks non-functional from data center
+- Scraped 1 real Yellowbird Amazon row locally (before Amazon CAPTCHA started blocking)
+- Loaded 300-row Cinderhaven synthetic history (5 SKUs × 2 retailers × 30 days) via `scripts/load_synthetic.py`
+- Added `scripts/load_synthetic_competitors.py` — seeds 30-day price history for all 5 competitors at market-realistic prices (Truff $17.99, Marie Sharp's $6.99, Dave's $6.49, Yellowbird $7.49, Melinda's $4.99)
+- Fixed `app/data.py` `get_latest_price_per_oz()` — was querying `v_latest_snapshot_per_product` for `brand_name`/`price_per_oz` columns that don't exist on that view; query now JOINs products+brands and computes price_per_oz inline
+- Fixed `app/components.py` `strftime("%-d")` → `ts.day` (Windows cross-platform)
+- Fixed `scrape.py` pack_weight_oz UPDATE-before-INSERT ordering bug
+- Fixed Dockerfile: removed ENTRYPOINT tini (not in playwright image), updated base from v1.49.0 to v1.60.0, pinned playwright==1.60.0 to match
+- Deployed version 4 successfully; dashboard health check passing
+
+**DB state (Fly Postgres):**
+- 600 total snapshots: 300 Cinderhaven + 60 per competitor × 5 brands
+- 6 brands, 20 SKU/retailer combinations, 30-day history each
+- price range: Cinderhaven/Yellowbird $0.76/oz → Truff $3.04/oz
+
+**Dashboard live at:** https://competitive-shelf-intelligence.fly.dev
+- Price Positioning tab: horizontal dot chart, all 6 brands, Walmart vs Amazon
+- Promo, OOS, Assortment, Review tabs: query views that work against synthetic data
+
+**For a paying client (production-ready scraping):**
+- Walmart: residential proxy service ($30-50/month) — ScraperAPI was $49/month (no free tier)
+- Amazon: residential proxy + ScraperAPI renders anti-bot headers correctly
+- ScraperAPI key → set `SCRAPERAPI_KEY` in `flyctl secrets` and `src/scrapers/walmart.py` Transport 1 activates
+
+**Next:**
+- Demo is ready to show. No further work required unless a client engagement starts.
+- When a client engages: obtain ScraperAPI or Bright Data residential proxy, set SCRAPERAPI_KEY secret, run `python scrape.py` on cron via `flyctl schedule` or Fly Machines scheduled tasks.
+
+---
