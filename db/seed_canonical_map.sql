@@ -1,0 +1,16 @@
+-- Manual entity resolution overrides.
+-- Populate this when the same physical product appears under different
+-- UPCs or names across Amazon and Walmart (e.g., bundle ASINs, pack variants).
+--
+-- Usage:
+--   psql $DATABASE_URL -f db/seed_canonical_map.sql
+--
+-- Find listing IDs by querying:
+--   SELECT id, retailer, retailer_id, product_url FROM retailer_listings;
+--
+-- Example (uncomment and fill in real IDs):
+-- INSERT INTO canonical_product_map
+--     (walmart_listing_id, amazon_listing_id, canonical_product_id, note, created_by)
+-- VALUES
+--     (NULL, NULL, NULL, 'example: Yellowbird Blue Agave 9.8oz (Walmart) = ASIN B07XXXXX (Amazon)', 'operator')
+-- ON CONFLICT DO NOTHING;
