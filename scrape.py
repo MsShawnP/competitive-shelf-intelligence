@@ -168,11 +168,12 @@ def _scrape_one(conn, run_id: int, scraper, entry: dict) -> Optional[int]:
 
     # Resolve canonical product + listing
     brand_id = _get_or_create_brand(conn, brand_name)
+    product_id, listing_id = resolve_product(scraped, brand_id, url, conn)
+
+    # Backfill weight after the product row exists (UPDATE is a no-op if already set)
     pack_weight_oz = parse_weight_oz(scraped.pack_size_raw)
     if pack_weight_oz is not None:
         _update_product_weight(conn, scraped.upc, scraped.product_name, pack_weight_oz)
-
-    product_id, listing_id = resolve_product(scraped, brand_id, url, conn)
 
     # Check prior price for price_drop_promo signal (R3-b)
     price_drop_promo = _check_price_drop(conn, listing_id, scraped.current_price)
