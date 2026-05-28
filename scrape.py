@@ -14,10 +14,9 @@ Set DATABASE_URL in .env for DB writes (required unless --dry-run).
 
 from __future__ import annotations
 
-import hashlib
 import logging
 import time
-from datetime import date, datetime, timezone
+from datetime import date
 from pathlib import Path
 from typing import Optional
 
@@ -90,8 +89,14 @@ def main(retailer: str, delay: float, dry_run: bool) -> None:
 
     with get_conn() as conn:
         run_id = _start_scrape_run(conn, retailer)
-        product_count, failure_count = _run_scrape(conn, run_id, products, delay)
-        _finish_scrape_run(conn, run_id, product_count, failure_count)
+        product_count, failure_count = 0, 0
+        try:
+            product_count, failure_count = _run_scrape(conn, run_id, products, delay)
+            _finish_scrape_run(conn, run_id, product_count, failure_count)
+        except Exception:
+            logger.exception("Scrape run %d crashed; marking failed", run_id)
+            _mark_run_failed(conn, run_id)
+            raise
 
     elapsed = time.monotonic() - start
     click.echo(
@@ -151,7 +156,6 @@ def _scrape_one(conn, run_id: int, scraper, entry: dict) -> Optional[int]:
 
     try:
         scraped = scraper.fetch_product(
-            listing_id=0,  # placeholder; real listing_id resolved below
             url=url,
             retailer_id=retailer_id,
         )
@@ -199,7 +203,7 @@ def _run_dry(products: list[dict], delay: float) -> None:
                         click.echo(f"  [skip] {entry['name']} — URL not configured")
                         continue
                     try:
-                        p = walmart.fetch_product(0, url, str(entry["retailer_id"]))
+                        p = walmart.fetch_product(url, str(entry["retailer_id"]))
                         click.echo(f"  [ok]   {p.product_name} @ ${p.current_price:.2f}")
                     except (ParseFailureError, BlockDetectedError) as exc:
                         click.echo(f"  [fail] {entry['name']}: {exc}")
@@ -212,7 +216,7 @@ def _run_dry(products: list[dict], delay: float) -> None:
                         click.echo(f"  [skip] {entry['name']} — URL not configured")
                         continue
                     try:
-                        p = amazon.fetch_product(0, url, str(entry["retailer_id"]))
+                        p = amazon.fetch_product(url, str(entry["retailer_id"]))
                         click.echo(f"  [ok]   {p.product_name} @ ${p.current_price:.2f}")
                     except (ParseFailureError, BlockDetectedError) as exc:
                         click.echo(f"  [fail] {entry['name']}: {exc}")
@@ -243,6 +247,14 @@ def _finish_scrape_run(conn, run_id: int, product_count: int, failure_count: int
         WHERE id = %s
         """,
         (product_count, failure_count, run_id),
+    )
+
+
+def _mark_run_failed(conn, run_id: int) -> None:
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE scrape_runs SET status = 'failed', completed_at = now() WHERE id = %s",
+        (run_id,),
     )
 
 

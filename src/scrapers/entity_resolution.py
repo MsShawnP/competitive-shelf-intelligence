@@ -22,6 +22,7 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
+from psycopg2 import sql
 from src.scrapers.base import ScrapedProduct
 
 logger = logging.getLogger(__name__)
@@ -114,13 +115,13 @@ def _resolve_by_canonical_map(
     # Check canonical_product_map directly for cross-retailer links
     col = "walmart_listing_id" if scraped.retailer == "walmart" else "amazon_listing_id"
     cur.execute(
-        f"""
+        sql.SQL("""
         SELECT cpm.canonical_product_id
         FROM canonical_product_map cpm
         JOIN retailer_listings rl ON rl.id = cpm.{col}
         WHERE rl.retailer = %s AND rl.retailer_id = %s
         LIMIT 1
-        """,
+        """).format(col=sql.Identifier(col)),
         (scraped.retailer, scraped.retailer_id),
     )
     row = cur.fetchone()

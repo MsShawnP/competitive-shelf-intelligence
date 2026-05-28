@@ -64,25 +64,25 @@ Code review complete. Three confirmed P1 bugs to fix, five P2 issues, plus maint
 
 ### P1 — Fix immediately (wrong behavior today)
 
-- [ ] **F4** `app/data.py:152` — `get_promo_summary` WHERE uses `v.` alias but table is `ps` → Promo summary tab always empty. Fix: rename `v.` → `ps.` in WHERE.
-- [ ] **F1** `app/data.py:164` — promo depth formula `(sale−price)/sale` goes negative for synthetic data, 0% for Amazon. Fix: `(price_cents − sale_price_cents) / price_cents`.
-- [ ] **REL-001** `scrape.py:91–94` — no try/finally around scrape_run lifecycle. Crashed run stays `'running'` forever. Fix: wrap `_run_scrape` call in try/finally that marks run `'failed'`.
+- [x] **F4** `app/data.py:152` — alias was already `ps.` in committed code; no change needed.
+- [x] **F1** `app/data.py:164` — promo depth formula fixed: `(price_cents − sale_price_cents) / price_cents`.
+- [x] **REL-001** `scrape.py:91–94` — wrapped `_run_scrape` in try/except; crashes now mark run `'failed'` and re-raise.
 
 ### P2 — Fix in same session
 
-- [ ] **F5** `walmart.py:342` — Walmart OOS miss when `availabilityStatus` absent; `availability != ''` guard blocks no-cart signal.
-- [ ] **REL-004** `app/data.py` — no `logger.exception` in any `except Exception` block; failures invisible.
-- [ ] **REL-005** `base.py:185` — `check_robots()` hangs indefinitely; `RobotFileParser.read()` has no timeout.
-- [ ] **SEC-002** `entity_resolution.py:120` — f-string column name in SQL JOIN; use `psycopg2.sql.Identifier` instead.
-- [ ] **SEC-007** `app/run.py:47` — `debug=True` hardcoded; gate on `FLASK_DEBUG` env var.
+- [x] **F5** `walmart.py:342` — removed `availability != ''` guard; missing `availabilityStatus` + no cart now correctly signals OOS.
+- [x] **REL-004** `app/data.py` — added `logger.exception()` to all 8 silent `except Exception` blocks.
+- [x] **REL-005** `base.py:185` — replaced `rp.read()` with `urllib.request.urlopen(..., timeout=10)` + `rp.parse()`.
+- [x] **SEC-002** `entity_resolution.py:120` — replaced f-string column interpolation with `psycopg2.sql.Identifier`.
+- [x] **SEC-007** `app/run.py:47` — `debug` now gated on `FLASK_DEBUG` env var.
 
-### P3 — Polish pass (separate session)
+### P3 — Polish pass
 
-- M01: `CHART_PALETTE` shadowed in `review_pulse.py`
-- M02: Dead imports in `scrape.py` (`hashlib`, `datetime`, `timezone`)
-- M05: `FONT_SERIF` unused constant; inconsistent serif stacks across tabs
-- M06: `'Cinderhaven'` hardcoded in 3 modules — define `OWN_BRAND` constant
-- M09: `listing_id` param on scrapers always `0`, never used — remove
+- [x] M01: Removed shadowed `CHART_PALETTE` from `review_pulse.py`; imports from `app.constants`.
+- [x] M02: Removed dead imports from `scrape.py` (`hashlib`, `datetime`, `timezone`).
+- [x] M05: Replaced all hardcoded Playfair Display strings with `FONT_SERIF` constant (6 files).
+- [x] M06: Added `OWN_BRAND = "Cinderhaven"` to `app/constants.py`; used in `data.py`, `price_positioning.py`, `oos_tracker.py`.
+- [x] M09: Removed unused `listing_id` param from `fetch_product` in both scrapers and all callers.
 
 ---
 

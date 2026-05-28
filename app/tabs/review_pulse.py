@@ -10,25 +10,19 @@ from app.charts import base_chart_layout
 from app.components import empty_state, last_scraped_indicator
 from app.constants import (
     CANVAS, CHART_PALETTE, DATE_RANGE_DEFAULT, DATE_RANGE_OPTIONS,
-    FONT_SANS, GREY_LIGHT, INK, TEXT_SEC,
+    FONT_SANS, FONT_SERIF, GREY_LIGHT, INK, TEXT_SEC,
 )
 from app.data import get_review_trends
 
 TAB_ID = "tab-review-pulse"
 CONTAINER_ID = "review-charts-container"
 
-# Expose a named constant so callbacks.py can reference it
-CHART_PALETTE = [
-    "#1f2e7a", "#0c6552", "#7e1f34", "#7a3d10", "#8e0b07",
-    "#8e9ad0", "#6dcdb5", "#e68a9a",
-]
-
 
 def layout() -> html.Div:
     return html.Div([
         html.H2(
             "Review Pulse",
-            style={"fontFamily": "'Playfair Display', Georgia, serif",
+            style={"fontFamily": FONT_SERIF,
                    "fontWeight": "700", "fontSize": "22px", "marginBottom": "4px"},
         ),
         last_scraped_indicator(),
@@ -73,7 +67,7 @@ def _build_charts(df: pd.DataFrame) -> list:
             [
                 html.H4(
                     brand,
-                    style={"fontFamily": "'Playfair Display', Georgia, serif",
+                    style={"fontFamily": FONT_SERIF,
                            "fontWeight": "700", "fontSize": "16px",
                            "marginBottom": "8px", "marginTop": "20px"},
                 ),

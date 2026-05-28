@@ -18,7 +18,9 @@ from app.constants import (
     COLOR_AMAZON,
     COLOR_WALMART,
     FONT_SANS,
+    FONT_SERIF,
     INK,
+    OWN_BRAND,
     TEXT_SEC,
 )
 from app.data import get_latest_price_per_oz
@@ -31,13 +33,13 @@ def layout() -> html.Div:
     return html.Div([
         html.H2(
             "Price Positioning",
-            style={"fontFamily": f"'Playfair Display', Georgia, serif", "fontWeight": "700",
+            style={"fontFamily": FONT_SERIF, "fontWeight": "700",
                    "fontSize": "22px", "marginBottom": "4px"},
         ),
         last_scraped_indicator(),
         html.P(
             "Current price per ounce by brand and retailer. "
-            "Cinderhaven shown as diamond markers.",
+            f"{OWN_BRAND} shown as diamond markers.",
             style={"fontSize": "14px", "color": TEXT_SEC, "marginBottom": "20px"},
         ),
         dcc.Graph(id=GRAPH_ID, config={"displayModeBar": False}),
@@ -79,7 +81,7 @@ def _build_figure(df: pd.DataFrame) -> go.Figure:
     ]:
         sub = df[df["retailer"] == retailer]
         for _, row in sub.iterrows():
-            is_cinderhaven = "Cinderhaven" in str(row["brand_name"])
+            is_cinderhaven = OWN_BRAND in str(row["brand_name"])
             symbol = "diamond" if is_cinderhaven else symbol_base
             label_weight = 700 if is_cinderhaven else 400
 

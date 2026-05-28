@@ -68,7 +68,7 @@ class AmazonScraper(BaseProductScraper):
     or a saved HTML string (via parse_html, used in fixture-based tests).
     """
 
-    def fetch_product(self, listing_id: int, url: str, retailer_id: str) -> ScrapedProduct:
+    def fetch_product(self, url: str, retailer_id: str) -> ScrapedProduct:
         """Fetch and parse a live Amazon product page via Playwright.
 
         Raises:

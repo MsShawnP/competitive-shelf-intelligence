@@ -8,6 +8,7 @@ Cache is initialized in run.py via init_cache(server).
 
 from __future__ import annotations
 
+import logging
 import os
 from datetime import date, timedelta
 from typing import Optional
@@ -15,8 +16,10 @@ from typing import Optional
 import pandas as pd
 
 from flask_caching import Cache
+from app.constants import OWN_BRAND
 
 cache = Cache()
+logger = logging.getLogger(__name__)
 
 
 def init_cache(server) -> None:
@@ -67,6 +70,7 @@ def get_last_scraped() -> dict:
                 return {"retailer": None, "completed_at": None}
             return {"retailer": row[0], "completed_at": row[1]}
     except Exception:
+        logger.exception("get_last_scraped failed")
         return {"retailer": None, "completed_at": None}
 
 
@@ -100,6 +104,7 @@ def get_latest_price_per_oz() -> pd.DataFrame:
                 conn,
             )
     except Exception:
+        logger.exception("get_latest_price_per_oz failed")
         return pd.DataFrame()
 
 
@@ -138,6 +143,7 @@ def get_promo_events(days: int = 30) -> pd.DataFrame:
                 params=params if params else None,
             )
     except Exception:
+        logger.exception("get_promo_events failed")
         return pd.DataFrame()
 
 
@@ -162,7 +168,7 @@ def get_promo_summary(days: int = 30) -> pd.DataFrame:
                     AVG(
                         CASE
                         WHEN ps.sale_price_cents IS NOT NULL AND ps.sale_price_cents > 0
-                        THEN (ps.sale_price_cents - ps.price_cents)::float / ps.sale_price_cents * 100.0
+                        THEN (ps.price_cents - ps.sale_price_cents)::float / ps.price_cents * 100.0
                         END
                     )                               AS avg_promo_depth_pct
                 FROM price_snapshots ps
@@ -177,6 +183,7 @@ def get_promo_summary(days: int = 30) -> pd.DataFrame:
                 params=params if params else None,
             )
     except Exception:
+        logger.exception("get_promo_summary failed")
         return pd.DataFrame()
 
 
@@ -212,6 +219,7 @@ def get_oos_events(days: int = 30) -> pd.DataFrame:
                 params=params if params else None,
             )
     except Exception:
+        logger.exception("get_oos_events failed")
         return pd.DataFrame()
 
 
@@ -223,7 +231,7 @@ def get_cinderhaven_oos_days(days: int = 30) -> int:
     try:
         with get_conn() as conn:
             cur = conn.cursor()
-            params: list = ["Cinderhaven"]
+            params: list = [OWN_BRAND]
             where = "AND b.canonical_name = %s AND ps.is_oos = TRUE"
             if cutoff:
                 where += " AND ps.scraped_date >= %s"
@@ -242,6 +250,7 @@ def get_cinderhaven_oos_days(days: int = 30) -> int:
             row = cur.fetchone()
             return int(row[0]) if row else 0
     except Exception:
+        logger.exception("get_cinderhaven_oos_days failed")
         return 0
 
 
@@ -298,6 +307,7 @@ def get_assortment_changes() -> pd.DataFrame:
                 conn,
             )
     except Exception:
+        logger.exception("get_assortment_changes failed")
         return pd.DataFrame()
 
 
@@ -337,4 +347,5 @@ def get_review_trends(days: int = 30) -> pd.DataFrame:
                 params=params if params else None,
             )
     except Exception:
+        logger.exception("get_review_trends failed")
         return pd.DataFrame()

@@ -6,7 +6,7 @@ import pandas as pd
 from dash import Input, Output, dash_table, html
 
 from app.components import empty_state, last_scraped_indicator
-from app.constants import CANVAS, FONT_SANS, GREY_LIGHT, RED, TEXT_SEC, TEAL
+from app.constants import CANVAS, FONT_SANS, FONT_SERIF, GREY_LIGHT, RED, TEXT_SEC, TEAL
 from app.data import get_assortment_changes
 
 TAB_ID = "tab-assortment-monitor"
@@ -17,7 +17,7 @@ def layout() -> html.Div:
     return html.Div([
         html.H2(
             "Assortment Monitor",
-            style={"fontFamily": "'Playfair Display', Georgia, serif",
+            style={"fontFamily": FONT_SERIF,
                    "fontWeight": "700", "fontSize": "22px", "marginBottom": "4px"},
         ),
         last_scraped_indicator(),

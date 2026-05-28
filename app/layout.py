@@ -5,7 +5,7 @@ from __future__ import annotations
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 
-from app.constants import CANVAS, CHICAGO, FONT_SANS, GREY_LIGHT, INK, TEXT_SEC
+from app.constants import CANVAS, CHICAGO, FONT_SANS, FONT_SERIF, GREY_LIGHT, INK, TEXT_SEC
 from app.tabs import (
     assortment_monitor,
     oos_tracker,
@@ -28,7 +28,7 @@ def create_layout() -> html.Div:
                     html.H1(
                         "Competitive Shelf Intelligence",
                         style={
-                            "fontFamily": "'Playfair Display', Georgia, serif",
+                            "fontFamily": FONT_SERIF,
                             "fontWeight": "700",
                             "fontSize": "26px",
                             "color": INK,

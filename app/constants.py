@@ -61,6 +61,8 @@ DATE_RANGE_OPTIONS = [
 DATE_RANGE_DEFAULT = 30
 
 # Categorical chart palette (paired color families)
+OWN_BRAND = "Cinderhaven"
+
 CHART_PALETTE = [
     "#1f2e7a",  # Chicago-20
     "#0c6552",  # HK-20

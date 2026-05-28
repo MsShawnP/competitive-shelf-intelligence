@@ -12,7 +12,7 @@ from app.charts import base_chart_layout
 from app.components import empty_state, last_scraped_indicator
 from app.constants import (
     CANVAS, COLOR_OOS, DATE_RANGE_DEFAULT, DATE_RANGE_OPTIONS,
-    FONT_SANS, GREY_LIGHT, INK, TEXT_SEC,
+    FONT_SANS, FONT_SERIF, GREY_LIGHT, INK, OWN_BRAND, TEXT_SEC,
 )
 from app.data import get_cinderhaven_oos_days, get_oos_events
 
@@ -25,7 +25,7 @@ def layout() -> html.Div:
     return html.Div([
         html.H2(
             "OOS Tracker",
-            style={"fontFamily": "'Playfair Display', Georgia, serif",
+            style={"fontFamily": FONT_SERIF,
                    "fontWeight": "700", "fontSize": "22px", "marginBottom": "4px"},
         ),
         last_scraped_indicator(),
@@ -109,7 +109,7 @@ def _build_callout(days: int) -> html.Div:
         [
             html.Div(
                 [
-                    html.Span("Cinderhaven estimated lost revenue",
+                    html.Span(f"{OWN_BRAND} estimated lost revenue",
                               style={"fontSize": "12px", "color": "#9a9a9a", "display": "block"}),
                     html.Span(f"${lost:,.0f}",
                               style={"fontSize": "28px", "fontWeight": "700",

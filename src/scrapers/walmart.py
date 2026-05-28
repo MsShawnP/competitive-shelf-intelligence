@@ -102,7 +102,7 @@ class WalmartScraper(BaseProductScraper):
         elif not os.getenv("SCRAPERAPI_KEY") and not self._use_google_shopping:
             super().__exit__(*args)
 
-    def fetch_product(self, listing_id: int, url: str, retailer_id: str) -> ScrapedProduct:
+    def fetch_product(self, url: str, retailer_id: str) -> ScrapedProduct:
         """Fetch and parse a Walmart product page.
 
         Raises:
@@ -341,7 +341,7 @@ class WalmartScraper(BaseProductScraper):
         # OOS detection (R4)
         availability = (product.get("availabilityStatus") or "").upper()
         is_oos_text = availability not in ("IN_STOCK", "AVAILABLE", "")
-        is_oos_no_cart = not has_cart_button and availability != ""
+        is_oos_no_cart = not has_cart_button
         is_oos = is_oos_text or is_oos_no_cart
         if is_oos_text:
             oos_signal = "oos_text"

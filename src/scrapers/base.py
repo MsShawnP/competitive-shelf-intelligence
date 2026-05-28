@@ -15,6 +15,7 @@ import logging
 import os
 import random
 import time
+import urllib.request
 import urllib.robotparser
 from dataclasses import dataclass
 from typing import Optional
@@ -182,9 +183,11 @@ class BaseProductScraper:
         origin = f"{parsed.scheme}://{parsed.netloc}"
         if origin not in self._robots_cache:
             rp = urllib.robotparser.RobotFileParser()
-            rp.set_url(f"{origin}/robots.txt")
             try:
-                rp.read()
+                robots_url = f"{origin}/robots.txt"
+                with urllib.request.urlopen(robots_url, timeout=10) as resp:
+                    content = resp.read().decode("utf-8", errors="ignore")
+                rp.parse(content.splitlines())
                 self._robots_cache[origin] = rp
             except Exception as exc:
                 logger.warning("Could not fetch robots.txt for %s: %s", origin, exc)

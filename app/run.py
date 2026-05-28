@@ -6,6 +6,7 @@ Matches retail-velocity-decision-tool/app/run.py pattern exactly.
 
 from __future__ import annotations
 
+import os
 import pathlib
 from dotenv import load_dotenv
 
@@ -44,4 +45,5 @@ def health():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8050)
+    debug = os.environ.get("FLASK_DEBUG", "").lower() in ("1", "true", "yes")
+    app.run(debug=debug, port=8050)
