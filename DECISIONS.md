@@ -117,6 +117,11 @@ Each entry:
 - **Why:** URLs from `config/products.yaml` are passed to ScraperAPI and Playwright with no domain allowlist. Risk is low because `products.yaml` is a committed, reviewed file in a private repo with no external write access. A URL allowlist (restrict to `walmart.com`, `amazon.com`) is the right fix but deferred to P2+ given the internal-tool context.
 - **Scope:** `scrape.py`, `src/scrapers/walmart.py`, `src/scrapers/base.py`.
 
+### 2026-05-28 — Price Positioning tab uses horizontal bar chart, not scatter plot
+- **Why:** Scatter plots require data literacy (interpreting X/Y position). Horizontal bars are immediately readable — longer bar = more expensive, no explanation needed. User preference confirmed explicitly.
+- **Scope:** `app/tabs/price_positioning.py`
+- **Do not:** Revert to scatter plot or dot plot without explicit user instruction.
+
 ## Reversed / Superseded
 
 When a decision is overturned:

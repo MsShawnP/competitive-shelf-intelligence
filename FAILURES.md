@@ -158,3 +158,17 @@ IPs, transparent to our HTML parsing code.
 **Status:** Resolved. Always pin `playwright==X.Y.Z` to match the base image tag exactly.
 
 **Tags:** playwright, docker, version-mismatch, dockerfile, fly-io
+
+---
+
+### 2026-05-28 — ce-sessions discovery script fails on Windows (`python3` not found + cp1252 encoding)
+
+**Attempted:** Running `/ce-compound` with session history enabled — the ce-sessions skill invokes `python3 scripts/extract-metadata.py` and `python3 scripts/extract-skeleton.py`.
+
+**Why it didn't work:** Windows does not alias `python3`; the command returned "No such file or directory." After switching to `python`, the skeleton extractor hit a `UnicodeEncodeError` because the session file contained characters outside the `cp1252` Windows code page (default encoding for Python on Windows).
+
+**What we tried instead:** Prefixed the command with `PYTHONUTF8=1` to force UTF-8. Both scripts completed successfully after that.
+
+**Status:** Resolved. On Windows, use `python` (not `python3`) and prefix with `PYTHONUTF8=1` when running ce-compound session scripts.
+
+**Tags:** windows, encoding, cp1252, utf8, ce-sessions, ce-compound, python3

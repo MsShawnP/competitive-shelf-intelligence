@@ -131,3 +131,19 @@ Accepted risks: autocommit partial state, rate-limit per-instance, SSRF via conf
 **Next session starts here:** Fix P1 bugs first (`app/data.py`, `scrape.py`), then P2. All three P1 bugs are mechanical and can be done in one commit. Run tests after each fix.
 
 ---
+
+## 2026-05-28 — All P1/P2/P3 fixes shipped; compound doc written; bar chart live
+
+**Started from:** Code review complete. Three P1 bugs, five P2, five P3 polish items queued.
+
+**Did:**
+- Fixed all 13 P1/P2/P3 items across 15 files (committed `0993fbe`)
+- Fixed `entry`-unbound bug in `scrape.py` `BlockDetectedError` handler (caught by post-compound reviewer)
+- Ran `/ce-compound` → `docs/solutions/logic-errors/price-convention-mismatch-oos-guard-clause-2026-05-28.md`
+- Replaced Price Positioning scatter plot with horizontal grouped bar chart (brands as rows, sorted by price, Cinderhaven outlined)
+
+**State:** All PLAN.md arcs done. Dashboard live at https://competitive-shelf-intelligence.fly.dev. No broken code.
+
+**Next:** Demo is ready. No further work unless a client engages. When that happens: obtain ScraperAPI key, `flyctl secrets set SCRAPERAPI_KEY=...`, run `python scrape.py`, set up cron.
+
+---

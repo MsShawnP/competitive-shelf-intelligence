@@ -116,6 +116,7 @@ def _run_scrape(conn, run_id: int, products: list[dict], delay: float) -> tuple[
 
     walmart_products = [p for p in products if p["retailer"] == "walmart"]
     amazon_products = [p for p in products if p["retailer"] == "amazon"]
+    entry: dict | None = None
 
     try:
         if walmart_products:
@@ -138,7 +139,7 @@ def _run_scrape(conn, run_id: int, products: list[dict], delay: float) -> tuple[
 
     except BlockDetectedError as exc:
         logger.error("BLOCK DETECTED — stopping run: %s", exc)
-        _log_failure(conn, run_id, None, "", str(exc), entry.get("url", ""))
+        _log_failure(conn, run_id, None, "", str(exc), entry.get("url", "") if entry else "")
 
     return product_count, failure_count
 
