@@ -12,6 +12,8 @@ from app.constants import (
     CANVAS, CHART_PALETTE, DATE_RANGE_DEFAULT, DATE_RANGE_OPTIONS,
     FONT_SANS, FONT_SERIF, GREY_LIGHT, INK, TEXT_SEC,
 )
+
+_ALLOWED_DAYS = frozenset(o["value"] for o in DATE_RANGE_OPTIONS)
 from app.data import get_review_trends
 
 TAB_ID = "tab-review-pulse"
@@ -47,7 +49,8 @@ def register_callbacks(app) -> None:
         Input("_refresh-trigger", "data"),
     )
     def update(days, _):
-        df = get_review_trends(days or 0)
+        days = days if days in _ALLOWED_DAYS else DATE_RANGE_DEFAULT
+        df = get_review_trends(days)
         if df.empty:
             return empty_state("No review data yet.")
         return _build_charts(df)

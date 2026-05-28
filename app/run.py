@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import os
 import pathlib
+import secrets as _secrets
+
 from dotenv import load_dotenv
 
 load_dotenv(pathlib.Path(__file__).resolve().parent.parent / ".env")
@@ -26,10 +28,19 @@ app = Dash(
     suppress_callback_exceptions=True,
 )
 server = app.server
+server.secret_key = os.environ.get("FLASK_SECRET_KEY") or _secrets.token_hex(32)
 init_cache(server)
 
 app.layout = create_layout()
 register_callbacks(app)
+
+
+@server.after_request
+def _add_security_headers(response):
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
 
 
 @server.route("/health")
@@ -41,7 +52,7 @@ def health():
             cur.execute("SELECT 1")
         return jsonify({"status": "ok"})
     except Exception:
-        return jsonify({"status": "db_unavailable"}), 503
+        return jsonify({"status": "error"}), 503
 
 
 if __name__ == "__main__":

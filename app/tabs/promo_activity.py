@@ -12,6 +12,8 @@ from app.constants import (
     CANVAS, COLOR_PROMO, DATE_RANGE_DEFAULT, DATE_RANGE_OPTIONS,
     FONT_SANS, FONT_SERIF, GREY_LIGHT, INK, TEXT_SEC,
 )
+
+_ALLOWED_DAYS = frozenset(o["value"] for o in DATE_RANGE_OPTIONS)
 from app.data import get_promo_events, get_promo_summary
 
 TAB_ID = "tab-promo-activity"
@@ -55,8 +57,9 @@ def register_callbacks(app) -> None:
         Input("_refresh-trigger", "data"),
     )
     def update(days, _):
-        df = get_promo_events(days or 0)
-        summary_df = get_promo_summary(days or 0)
+        days = days if days in _ALLOWED_DAYS else DATE_RANGE_DEFAULT
+        df = get_promo_events(days)
+        summary_df = get_promo_summary(days)
 
         heatmap_fig = _build_heatmap(df) if not df.empty else _empty_fig("No promo events in this window.")
         summary_el = _build_summary(summary_df) if not summary_df.empty else empty_state("No promo data.")

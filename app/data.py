@@ -119,13 +119,8 @@ def get_promo_events(days: int = 30) -> pd.DataFrame:
     cutoff = _date_cutoff(days)
     try:
         with get_conn() as conn:
-            params: list = []
-            where = "WHERE (v.has_promo_badge OR v.price_drop_promo)"
-            if cutoff:
-                where += " AND v.scraped_date >= %s"
-                params.append(cutoff)
             return pd.read_sql(
-                f"""
+                """
                 SELECT
                     v.brand_name,
                     v.product_name,
@@ -136,11 +131,13 @@ def get_promo_events(days: int = 30) -> pd.DataFrame:
                     v.price_cents / 100.0              AS current_price,
                     v.sale_price_cents / 100.0         AS sale_price
                 FROM v_promo_events v
-                {where}
+                WHERE (v.has_promo_badge OR v.price_drop_promo)
+                  AND (%s::date IS NULL OR v.scraped_date >= %s)
                 ORDER BY v.brand_name, v.scraped_date
+                LIMIT 10000
                 """,
                 conn,
-                params=params if params else None,
+                params=[cutoff, cutoff],
             )
     except Exception:
         logger.exception("get_promo_events failed")
@@ -154,13 +151,8 @@ def get_promo_summary(days: int = 30) -> pd.DataFrame:
     cutoff = _date_cutoff(days)
     try:
         with get_conn() as conn:
-            params: list = []
-            where = "WHERE (ps.has_promo_badge OR ps.price_drop_promo)"
-            if cutoff:
-                where += " AND ps.scraped_date >= %s"
-                params.append(cutoff)
             return pd.read_sql(
-                f"""
+                """
                 SELECT
                     b.canonical_name                AS brand_name,
                     rl.retailer,
@@ -175,12 +167,13 @@ def get_promo_summary(days: int = 30) -> pd.DataFrame:
                 JOIN retailer_listings rl ON rl.id = ps.listing_id
                 JOIN products p ON p.id = rl.product_id
                 JOIN brands b ON b.id = p.brand_id
-                {where}
+                WHERE (ps.has_promo_badge OR ps.price_drop_promo)
+                  AND (%s::date IS NULL OR ps.scraped_date >= %s)
                 GROUP BY b.canonical_name, rl.retailer
                 ORDER BY promo_events DESC
                 """,
                 conn,
-                params=params if params else None,
+                params=[cutoff, cutoff],
             )
     except Exception:
         logger.exception("get_promo_summary failed")
@@ -198,13 +191,8 @@ def get_oos_events(days: int = 30) -> pd.DataFrame:
     cutoff = _date_cutoff(days)
     try:
         with get_conn() as conn:
-            params: list = []
-            where = "WHERE v.is_oos = TRUE"
-            if cutoff:
-                where += " AND v.scraped_date >= %s"
-                params.append(cutoff)
             return pd.read_sql(
-                f"""
+                """
                 SELECT
                     v.brand_name,
                     v.product_name,
@@ -212,11 +200,13 @@ def get_oos_events(days: int = 30) -> pd.DataFrame:
                     v.scraped_date,
                     v.oos_signal
                 FROM v_oos_events v
-                {where}
+                WHERE v.is_oos = TRUE
+                  AND (%s::date IS NULL OR v.scraped_date >= %s)
                 ORDER BY v.brand_name, v.scraped_date
+                LIMIT 10000
                 """,
                 conn,
-                params=params if params else None,
+                params=[cutoff, cutoff],
             )
     except Exception:
         logger.exception("get_oos_events failed")
@@ -231,21 +221,18 @@ def get_cinderhaven_oos_days(days: int = 30) -> int:
     try:
         with get_conn() as conn:
             cur = conn.cursor()
-            params: list = [OWN_BRAND]
-            where = "AND b.canonical_name = %s AND ps.is_oos = TRUE"
-            if cutoff:
-                where += " AND ps.scraped_date >= %s"
-                params.append(cutoff)
             cur.execute(
-                f"""
+                """
                 SELECT COUNT(DISTINCT ps.scraped_date)
                 FROM price_snapshots ps
                 JOIN retailer_listings rl ON rl.id = ps.listing_id
                 JOIN products p ON p.id = rl.product_id
                 JOIN brands b ON b.id = p.brand_id
-                WHERE 1=1 {where}
+                WHERE b.canonical_name = %s
+                  AND ps.is_oos = TRUE
+                  AND (%s::date IS NULL OR ps.scraped_date >= %s)
                 """,
-                params,
+                [OWN_BRAND, cutoff, cutoff],
             )
             row = cur.fetchone()
             return int(row[0]) if row else 0
@@ -322,13 +309,8 @@ def get_review_trends(days: int = 30) -> pd.DataFrame:
     cutoff = _date_cutoff(days)
     try:
         with get_conn() as conn:
-            params: list = []
-            where = "WHERE ps.star_rating IS NOT NULL"
-            if cutoff:
-                where += " AND ps.scraped_date >= %s"
-                params.append(cutoff)
             return pd.read_sql(
-                f"""
+                """
                 SELECT
                     b.canonical_name    AS brand_name,
                     rl.retailer,
@@ -339,12 +321,14 @@ def get_review_trends(days: int = 30) -> pd.DataFrame:
                 JOIN retailer_listings rl ON rl.id = ps.listing_id
                 JOIN products p ON p.id = rl.product_id
                 JOIN brands b ON b.id = p.brand_id
-                {where}
+                WHERE ps.star_rating IS NOT NULL
+                  AND (%s::date IS NULL OR ps.scraped_date >= %s)
                 GROUP BY b.canonical_name, rl.retailer, ps.scraped_date
                 ORDER BY b.canonical_name, ps.scraped_date
+                LIMIT 10000
                 """,
                 conn,
-                params=params if params else None,
+                params=[cutoff, cutoff],
             )
     except Exception:
         logger.exception("get_review_trends failed")

@@ -129,6 +129,8 @@ class BaseProductScraper:
 
     def __enter__(self) -> "BaseProductScraper":
         proxy_url = os.getenv("PROXY_URL")
+        if proxy_url and not proxy_url.startswith(("http://", "https://", "socks5://")):
+            raise ValueError(f"PROXY_URL must start with http://, https://, or socks5://: {proxy_url!r}")
         self._playwright = sync_playwright().start()
         self._browser = self._playwright.chromium.launch(
             headless=True,

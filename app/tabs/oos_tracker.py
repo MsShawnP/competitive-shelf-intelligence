@@ -14,6 +14,8 @@ from app.constants import (
     CANVAS, COLOR_OOS, DATE_RANGE_DEFAULT, DATE_RANGE_OPTIONS,
     FONT_SANS, FONT_SERIF, GREY_LIGHT, INK, OWN_BRAND, TEXT_SEC,
 )
+
+_ALLOWED_DAYS = frozenset(o["value"] for o in DATE_RANGE_OPTIONS)
 from app.data import get_cinderhaven_oos_days, get_oos_events
 
 TAB_ID = "tab-oos-tracker"
@@ -52,7 +54,7 @@ def register_callbacks(app) -> None:
         Input("_refresh-trigger", "data"),
     )
     def update(days, _):
-        days = days or 0
+        days = days if days in _ALLOWED_DAYS else DATE_RANGE_DEFAULT
         df = get_oos_events(days)
         heatmap = _build_heatmap(df) if not df.empty else _empty_fig("No OOS events in this window.")
         callout = _build_callout(days)

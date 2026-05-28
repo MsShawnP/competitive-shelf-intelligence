@@ -52,3 +52,6 @@ Thumbs.db
 
 # Claude Code
 .claude-project-url
+
+# Debug/admin scripts with potential hardcoded config
+scripts/_*.py
