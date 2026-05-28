@@ -1,0 +1,90 @@
+# Tracked competitor products
+#
+# HOW TO ADD A PRODUCT:
+#   1. Find the product on Walmart.com or Amazon.com
+#   2. Copy the full product URL
+#   3. Get the retailer_id: Walmart item ID is in the URL (/ip/.../XXXXXXXX)
+#      Amazon ASIN is the 10-character ID in the URL (/dp/XXXXXXXXXX)
+#   4. Add a new entry below following the same format
+#   5. UPC is optional but helps link the same product across retailers
+#
+# POC GATE: Only the first product (walmart) is needed to validate Walmart scraping.
+# Replace the placeholder URL with a real Walmart product URL before running the POC.
+
+products:
+  # --- Yellowbird ---
+  - name: "Yellowbird Blue Agave Sriracha Hot Sauce 9.8 oz"
+    brand: "Yellowbird"
+    retailer: walmart
+    url: "REPLACE_WITH_REAL_WALMART_URL"
+    # Example URL format: https://www.walmart.com/ip/Yellowbird-Sriracha/XXXXXXXXX
+    retailer_id: "REPLACE_WITH_ITEM_ID"
+    upc: ""  # fill in if known
+
+  - name: "Yellowbird Blue Agave Sriracha Hot Sauce 9.8 oz"
+    brand: "Yellowbird"
+    retailer: amazon
+    url: "REPLACE_WITH_REAL_AMAZON_URL"
+    # Example URL format: https://www.amazon.com/dp/XXXXXXXXXX
+    retailer_id: "REPLACE_WITH_ASIN"
+    upc: ""
+
+  # --- Truff ---
+  - name: "TRUFF Original Black Truffle Hot Sauce 6 oz"
+    brand: "Truff"
+    retailer: walmart
+    url: "REPLACE_WITH_REAL_WALMART_URL"
+    retailer_id: "REPLACE_WITH_ITEM_ID"
+    upc: ""
+
+  - name: "TRUFF Original Black Truffle Hot Sauce 6 oz"
+    brand: "Truff"
+    retailer: amazon
+    url: "REPLACE_WITH_REAL_AMAZON_URL"
+    retailer_id: "REPLACE_WITH_ASIN"
+    upc: ""
+
+  # --- Melinda's ---
+  - name: "Melinda's Original Habanero Pepper Sauce 12 oz"
+    brand: "Melinda's"
+    retailer: walmart
+    url: "REPLACE_WITH_REAL_WALMART_URL"
+    retailer_id: "REPLACE_WITH_ITEM_ID"
+    upc: ""
+
+  - name: "Melinda's Original Habanero Pepper Sauce 12 oz"
+    brand: "Melinda's"
+    retailer: amazon
+    url: "REPLACE_WITH_REAL_AMAZON_URL"
+    retailer_id: "REPLACE_WITH_ASIN"
+    upc: ""
+
+  # --- Dave's Gourmet ---
+  - name: "Dave's Gourmet Original Insanity Hot Sauce 5 oz"
+    brand: "Dave's Gourmet"
+    retailer: walmart
+    url: "REPLACE_WITH_REAL_WALMART_URL"
+    retailer_id: "REPLACE_WITH_ITEM_ID"
+    upc: ""
+
+  - name: "Dave's Gourmet Original Insanity Hot Sauce 5 oz"
+    brand: "Dave's Gourmet"
+    retailer: amazon
+    url: "REPLACE_WITH_REAL_AMAZON_URL"
+    retailer_id: "REPLACE_WITH_ASIN"
+    upc: ""
+
+  # --- Marie Sharp's ---
+  - name: "Marie Sharp's Fiery Hot Habanero Pepper Sauce 5 oz"
+    brand: "Marie Sharp's"
+    retailer: walmart
+    url: "REPLACE_WITH_REAL_WALMART_URL"
+    retailer_id: "REPLACE_WITH_ITEM_ID"
+    upc: ""
+
+  - name: "Marie Sharp's Fiery Hot Habanero Pepper Sauce 5 oz"
+    brand: "Marie Sharp's"
+    retailer: amazon
+    url: "REPLACE_WITH_REAL_AMAZON_URL"
+    retailer_id: "REPLACE_WITH_ASIN"
+    upc: ""
