@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Environment
+.env
+.env.*
+*.key
+credentials.*
+secrets.*
+
+# Playwright / browser
+playwright-report/
+test-results/
+
+# dbt
+target/
+dbt_packages/
+logs/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Data
+*.csv
+*.parquet
+*.db
+*.sqlite
+data/raw/
+data/scraped/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude Code
+.claude-project-url
