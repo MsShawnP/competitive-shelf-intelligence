@@ -44,30 +44,66 @@ _PRODUCT_PATHS = [
 ]
 
 
+def _camoufox_available() -> bool:
+    """Return True if camoufox is installed and its Firefox binary has been fetched."""
+    try:
+        from camoufox.sync_api import Camoufox  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
 class WalmartScraper(BaseProductScraper):
     """Scrapes a Walmart product page using __NEXT_DATA__ JSON parsing.
 
-    Transport selection (checked in fetch_product):
-      SCRAPERAPI_KEY set  → HTTP request via ScraperAPI (handles anti-bot)
-      SCRAPERAPI_KEY unset → Playwright (local dev / fixture-based testing only)
-
-    Walmart's bot detection blocks plain Playwright from residential and data-
-    center IPs. ScraperAPI is the production transport (DECISIONS.md).
+    Transport selection priority:
+      1. SCRAPERAPI_KEY set  → HTTP via ScraperAPI (production, handles anti-bot)
+      2. camoufox installed  → Firefox-based stealth browser (free, no key needed)
+      3. Google Shopping     → price-only fallback via Google search (demo/dev)
+      4. plain Playwright    → fixture tests only; blocked by Walmart in production
     """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._use_google_shopping = False
+
     def __enter__(self) -> "WalmartScraper":
-        if not os.getenv("SCRAPERAPI_KEY"):
-            super().__enter__()
+        if os.getenv("SCRAPERAPI_KEY"):
+            return self  # no browser needed
+        if _camoufox_available():
+            try:
+                from camoufox.sync_api import Camoufox
+                proxy_url = os.getenv("PROXY_URL")
+                proxy = {"server": proxy_url} if proxy_url else None
+                self._camoufox_cm = Camoufox(
+                    headless=True,
+                    os="windows",
+                    block_webrtc=True,
+                    proxy=proxy,
+                )
+                self._camoufox_browser = self._camoufox_cm.__enter__()
+                logger.info("WalmartScraper: using camoufox (Firefox stealth)")
+                return self
+            except Exception as exc:
+                logger.warning("camoufox launch failed (%s) — falling back to Google Shopping", exc)
+                self._use_google_shopping = True
+                return self
+        # Neither ScraperAPI nor camoufox — use Google Shopping as the price-only demo fallback
+        logger.info("WalmartScraper: no ScraperAPI key or camoufox — using Google Shopping fallback")
+        self._use_google_shopping = True
         return self
 
     def __exit__(self, *args) -> None:
-        if not os.getenv("SCRAPERAPI_KEY"):
+        if hasattr(self, "_camoufox_cm"):
+            try:
+                self._camoufox_cm.__exit__(*args)
+            except Exception:
+                pass
+        elif not os.getenv("SCRAPERAPI_KEY") and not self._use_google_shopping:
             super().__exit__(*args)
 
     def fetch_product(self, listing_id: int, url: str, retailer_id: str) -> ScrapedProduct:
         """Fetch and parse a Walmart product page.
-
-        Uses ScraperAPI when SCRAPERAPI_KEY is set; falls back to Playwright.
 
         Raises:
             RobotsDisallowedError: robots.txt disallows the URL.
@@ -77,6 +113,17 @@ class WalmartScraper(BaseProductScraper):
         self.check_robots(url)
         if os.getenv("SCRAPERAPI_KEY"):
             product = self._fetch_via_scraperapi(url, retailer_id)
+        elif hasattr(self, "_camoufox_browser"):
+            product = self._fetch_via_camoufox(url, retailer_id)
+        elif self._use_google_shopping:
+            from src.scrapers.google_shopping import fetch_walmart_price_via_google
+            # Extract a human-readable name from the Walmart URL slug (/ip/Name/ID)
+            parts = url.rstrip("/").split("/")
+            slug_name = parts[-2] if len(parts) >= 3 and parts[-1].isdigit() else retailer_id
+            name_hint = slug_name.replace("-", " ")
+            product = fetch_walmart_price_via_google(
+                name_hint, retailer_id, url, self.rate_limit_secs
+            )
         else:
             page = self.fetch_page(url)
             try:
@@ -90,6 +137,19 @@ class WalmartScraper(BaseProductScraper):
             product.current_price or 0,
         )
         return product
+
+    def _fetch_via_camoufox(self, url: str, retailer_id: str) -> ScrapedProduct:
+        """Fetch Walmart page via camoufox Firefox stealth browser."""
+        self._rate_limit()
+        page = self._camoufox_browser.new_page()
+        try:
+            response = page.goto(url, wait_until="domcontentloaded", timeout=30_000)
+            if self._detect_block(response, page):
+                raise BlockDetectedError(f"Anti-bot block detected at {url}")
+            self._slow_scroll(page)
+            return self._parse_page(page, url, retailer_id)
+        finally:
+            page.close()
 
     def _fetch_via_scraperapi(self, url: str, retailer_id: str) -> ScrapedProduct:
         """Fetch Walmart page HTML via ScraperAPI, then parse with parse_html().

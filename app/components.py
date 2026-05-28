@@ -44,7 +44,7 @@ def last_scraped_indicator() -> html.Div:
         text = "Last scraped: no data yet"
     else:
         if isinstance(ts, datetime):
-            formatted = ts.strftime("%B %-d, %Y")
+            formatted = ts.strftime(f"%B {ts.day}, %Y")
         else:
             formatted = str(ts)[:10]
         retailer_label = {
