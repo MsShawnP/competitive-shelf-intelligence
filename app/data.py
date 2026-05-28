@@ -83,16 +83,19 @@ def get_latest_price_per_oz() -> pd.DataFrame:
             return pd.read_sql(
                 """
                 SELECT
-                    v.brand_name,
-                    v.product_name,
+                    b.canonical_name                        AS brand_name,
+                    p.canonical_name                        AS product_name,
                     v.retailer,
-                    v.price_cents / 100.0          AS current_price,
-                    v.price_per_oz,
+                    v.price_cents / 100.0                   AS current_price,
+                    v.price_cents::float / p.pack_weight_oz / 100.0 AS price_per_oz,
                     v.scraped_date,
                     v.is_oos
                 FROM v_latest_snapshot_per_product v
-                WHERE v.price_per_oz IS NOT NULL
-                ORDER BY v.brand_name, v.retailer
+                JOIN products p ON p.id = v.product_id
+                JOIN brands b ON b.id = p.brand_id
+                WHERE p.pack_weight_oz IS NOT NULL
+                  AND p.pack_weight_oz > 0
+                ORDER BY b.canonical_name, v.retailer
                 """,
                 conn,
             )

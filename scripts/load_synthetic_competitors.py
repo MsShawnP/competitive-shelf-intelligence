@@ -1,0 +1,234 @@
+"""
+Load synthetic competitor price history for all 5 hot sauce brands.
+
+Uses market-realistic prices based on publicly known retail pricing.
+Idempotent: safe to re-run; uses ON CONFLICT DO NOTHING for snapshots.
+
+Usage:
+    python scripts/load_synthetic_competitors.py
+    python scripts/load_synthetic_competitors.py --days 60
+    python scripts/load_synthetic_competitors.py --dry-run
+"""
+
+from __future__ import annotations
+
+import logging
+import random
+from datetime import date, datetime, timedelta
+
+import click
+from dotenv import load_dotenv
+
+load_dotenv()
+
+from src.db import get_conn
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s — %(message)s",
+    datefmt="%H:%M:%S",
+)
+logger = logging.getLogger(__name__)
+
+# Realistic retail prices as of May 2026 (Amazon/Walmart parity)
+# (brand, product_name, weight_oz, walmart_id, amazon_id, base_price_cents, upc)
+_COMPETITORS = [
+    {
+        "brand": "Yellowbird",
+        "name": "Yellowbird Blue Agave Sriracha Hot Sauce 9.8 oz",
+        "weight_oz": 9.8,
+        "walmart_id": "794454518",
+        "walmart_url": "https://www.walmart.com/ip/Yellowbird-Sauce-Agave-Blue-Sriracha-9-8-Oz/794454518",
+        "amazon_id": "B01NCF5ULG",
+        "amazon_url": "https://www.amazon.com/Yellowbird-Sauce-Condiment-Agave-Sriracha/dp/B01NCF5ULG",
+        "base_price_cents": 749,   # $7.49
+        "upc": "856262005167",
+        # price already in db from real scrape — skip re-insert for today
+        "skip_today": True,
+    },
+    {
+        "brand": "Truff",
+        "name": "TRUFF Original Black Truffle Hot Sauce 6 oz",
+        "weight_oz": 6.0,
+        "walmart_id": "620880109",
+        "walmart_url": "https://www.walmart.com/ip/TRUFF-Original-Black-Truffle-Hot-Sauce-6-oz/620880109",
+        "amazon_id": "B07HMJWCNL",
+        "amazon_url": "https://www.amazon.com/TRUFF-Gourmet-Peppers-Truffle-Experience/dp/B07HMJWCNL",
+        "base_price_cents": 1799,  # $17.99 (premium)
+        "upc": "710051998057",
+        "skip_today": False,
+    },
+    {
+        "brand": "Melinda's",
+        "name": "Melinda's Original Habanero Hot Sauce 5 oz",
+        "weight_oz": 5.0,
+        "walmart_id": "927006219",
+        "walmart_url": "https://www.walmart.com/ip/Melinda-s-Original-Habanero-Hot-Sauce/927006219",
+        "amazon_id": "B005HJ038S",
+        "amazon_url": "https://www.amazon.com/dp/B005HJ038S",
+        "base_price_cents": 499,   # $4.99
+        "upc": "736924182811",
+        "skip_today": False,
+    },
+    {
+        "brand": "Dave's Gourmet",
+        "name": "Dave's Gourmet Original Insanity Hot Sauce 5 oz",
+        "weight_oz": 5.0,
+        "walmart_id": "30955208",
+        "walmart_url": "https://www.walmart.com/ip/Dave-s-Gourmet-Insanity-Hot-Sauce-5-Oz/30955208",
+        "amazon_id": "B0000DID5R",
+        "amazon_url": "https://www.amazon.com/dp/B0000DID5R",
+        "base_price_cents": 649,   # $6.49
+        "upc": "753469000011",
+        "skip_today": False,
+    },
+    {
+        "brand": "Marie Sharp's",
+        "name": "Marie Sharp's Fiery Hot Habanero Pepper Sauce 5 oz",
+        "weight_oz": 5.0,
+        "walmart_id": "10448878",
+        "walmart_url": "https://www.walmart.com/ip/Marie-Sharp-s-Fiery-Hot-Habanero-Pepper-Sauce/10448878",
+        "amazon_id": "B0014L1PPS",
+        "amazon_url": "https://www.amazon.com/Marie-Sharps-Fiery-Habanero-Pepper/dp/B0014L1PPS",
+        "base_price_cents": 699,   # $6.99
+        "upc": "",
+        "skip_today": False,
+    },
+]
+
+
+@click.command()
+@click.option("--dry-run", is_flag=True, default=False)
+@click.option("--days", default=30, show_default=True)
+def main(dry_run: bool, days: int) -> None:
+    """Seed synthetic competitor price history."""
+    if dry_run:
+        click.echo("DRY RUN — no writes")
+        for c in _COMPETITORS:
+            click.echo(
+                f"  {c['brand']}: {c['name']} "
+                f"${c['base_price_cents']/100:.2f} × {days}d × 2 retailers"
+            )
+        return
+
+    total_snapshots = 0
+    with get_conn() as conn:
+        for comp in _COMPETITORS:
+            brand_id = _upsert_brand(conn, comp["brand"])
+            product_id = _upsert_product(conn, brand_id, comp)
+            for retailer, rid, url in [
+                ("walmart", comp["walmart_id"], comp["walmart_url"]),
+                ("amazon",  comp["amazon_id"],  comp["amazon_url"]),
+            ]:
+                listing_id = _upsert_listing(conn, product_id, retailer, rid, url)
+                n = _insert_history(
+                    conn,
+                    listing_id,
+                    comp["base_price_cents"],
+                    days,
+                    skip_today=(comp["skip_today"] and retailer == "amazon"),
+                )
+                total_snapshots += n
+                logger.info(
+                    "%-20s %-8s  $%.2f  %d days",
+                    comp["brand"], retailer, comp["base_price_cents"] / 100, days,
+                )
+
+    click.echo(f"Done. {total_snapshots} snapshots written.")
+
+
+def _upsert_brand(conn, name: str) -> int:
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO brands (canonical_name) VALUES (%s) "
+        "ON CONFLICT (canonical_name) DO UPDATE SET canonical_name = EXCLUDED.canonical_name "
+        "RETURNING id",
+        (name,),
+    )
+    return cur.fetchone()[0]
+
+
+def _upsert_product(conn, brand_id: int, comp: dict) -> int:
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO products (brand_id, canonical_name, pack_size_raw, pack_weight_oz, upc) "
+        "VALUES (%s, %s, %s, %s, %s) "
+        "ON CONFLICT (brand_id, canonical_name) "
+        "DO UPDATE SET pack_weight_oz = EXCLUDED.pack_weight_oz "
+        "RETURNING id",
+        (brand_id, comp["name"], comp["name"], comp["weight_oz"], comp["upc"] or None),
+    )
+    return cur.fetchone()[0]
+
+
+def _upsert_listing(conn, product_id: int, retailer: str, rid: str, url: str) -> int:
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO retailer_listings (product_id, retailer, retailer_id, product_url) "
+        "VALUES (%s, %s, %s, %s) "
+        "ON CONFLICT (retailer, retailer_id) DO UPDATE SET last_seen_at = now() "
+        "RETURNING id",
+        (product_id, retailer, rid, url),
+    )
+    return cur.fetchone()[0]
+
+
+def _insert_history(
+    conn, listing_id: int, base_price_cents: int, days: int, skip_today: bool
+) -> int:
+    today = date.today()
+    random.seed(listing_id + days)
+
+    oos_count = max(1, round(days * 3 / 90))
+    promo_count = max(1, round(days * 2 / 90))
+
+    all_days = [today - timedelta(days=i) for i in range(days)]
+    if skip_today:
+        all_days = [d for d in all_days if d != today]
+
+    oos_days = set(random.sample(all_days, min(oos_count, len(all_days))))
+    non_oos = [d for d in all_days if d not in oos_days]
+    promo_days = set(random.sample(non_oos, min(promo_count, len(non_oos))))
+
+    cur = conn.cursor()
+    inserted = 0
+    for day in reversed(all_days):
+        is_oos = day in oos_days
+        is_promo = day in promo_days
+        # Small random walk ±3% so trend lines have texture
+        jitter = random.uniform(0.97, 1.03)
+        price = round(base_price_cents * jitter)
+        sale_price = round(price * 0.85) if is_promo else None
+
+        cur.execute(
+            """
+            INSERT INTO price_snapshots (
+                listing_id, scraped_at, scraped_date,
+                price_cents, sale_price_cents,
+                has_promo_badge, price_drop_promo,
+                is_oos, oos_signal,
+                star_rating, review_count
+            ) VALUES (
+                %s, %s AT TIME ZONE 'UTC', %s,
+                %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            ON CONFLICT (listing_id, scraped_date) DO NOTHING
+            """,
+            (
+                listing_id,
+                datetime.combine(day, datetime.min.time()),
+                day,
+                price, sale_price,
+                is_promo, False,
+                is_oos, "oos_text" if is_oos else None,
+                round(random.uniform(4.0, 4.9), 1),
+                random.randint(30, 2000),
+            ),
+        )
+        if cur.rowcount:
+            inserted += 1
+    return inserted
+
+
+if __name__ == "__main__":
+    main()
