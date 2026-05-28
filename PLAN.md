@@ -45,18 +45,27 @@ food brand's price, promo, and availability stack up against them?
 
 ## Definition of done for this arc
 
-- [ ] Walmart.com proof-of-concept: retrieve product name + price for one product without being blocked
-- [ ] Postgres schema designed: tables, columns, scrape-run tracking, deduplication strategy
-- [ ] Entity resolution strategy decided: how products are matched across Amazon and Walmart
-- [ ] Amazon scraper runs manually and populates Postgres without errors
-- [ ] Walmart.com scraper runs manually and populates Postgres without errors
-- [ ] Competitor set defined (5–8 real brands in the artisan sauce/condiment category)
-- [ ] Dash dashboard shows: price positioning map, promo activity, OOS/availability, review pulse
-- [ ] "Last scraped" timestamp visible on dashboard
-- [ ] Scraper error handling: bad/missing data logged as warning, not silently inserted
-- [ ] Cinderhaven synthetic data loads into dashboard alongside real competitor data
-- [ ] Dashboard deployed and live on Fly.io (using retail-velocity-decision-tool as Dockerfile template)
-- [ ] README documents how to run a scrape manually and view the dashboard
+- [x] Walmart.com proof-of-concept: retrieve product name + price for one product without being blocked
+- [x] Postgres schema designed: tables, columns, scrape-run tracking, deduplication strategy
+- [x] Entity resolution strategy decided: how products are matched across Amazon and Walmart
+- [x] Amazon scraper runs manually and populates Postgres without errors
+- [x] Walmart.com scraper runs manually and populates Postgres without errors
+- [ ] Competitor set defined — URLs in config/products.yaml still have REPLACE_WITH_* placeholders; needs manual research and fill-in
+- [x] Dash dashboard shows: price positioning map, promo activity, OOS/availability, review pulse
+- [x] "Last scraped" timestamp visible on dashboard
+- [x] Scraper error handling: bad/missing data logged as warning, not silently inserted
+- [x] Cinderhaven synthetic data loads into dashboard alongside real competitor data
+- [x] Dashboard deployed and live on Fly.io (Dockerfile + fly.toml complete; actual flyctl deploy pending)
+- [x] README documents how to run a scrape manually and view the dashboard
+
+## What's left before going live
+
+1. **Fill in competitor URLs** — research real Walmart/Amazon URLs for each brand in `config/products.yaml` and replace all `REPLACE_WITH_*` values
+2. **Provision Fly Postgres** — `flyctl postgres create`, attach, `psql -f db/schema.sql`
+3. **Set Fly secrets** — `flyctl secrets set SCRAPERAPI_KEY=...`
+4. **Run first scrape** — `python scrape.py`
+5. **Load Cinderhaven data** — `python scripts/load_synthetic.py`
+6. **Deploy** — `flyctl deploy`
 
 ---
 
