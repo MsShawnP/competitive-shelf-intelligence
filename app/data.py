@@ -1,0 +1,337 @@
+"""SQL query layer for the dashboard.
+
+All public functions return DataFrames. Results are cached with
+@cache.memoize so repeated tab switches don't re-query Postgres.
+
+Cache is initialized in run.py via init_cache(server).
+"""
+
+from __future__ import annotations
+
+import os
+from datetime import date, timedelta
+from typing import Optional
+
+import pandas as pd
+
+from flask_caching import Cache
+
+cache = Cache()
+
+
+def init_cache(server) -> None:
+    cache_dir = os.environ.get("CACHE_DIR", "/cache")
+    try:
+        cache.init_app(server, config={
+            "CACHE_TYPE": "FileSystemCache",
+            "CACHE_DIR": cache_dir,
+            "CACHE_DEFAULT_TIMEOUT": 3600,
+        })
+    except Exception:
+        # Fall back to in-memory cache (local dev without /cache volume)
+        cache.init_app(server, config={
+            "CACHE_TYPE": "SimpleCache",
+            "CACHE_DEFAULT_TIMEOUT": 3600,
+        })
+
+
+def _date_cutoff(days: int) -> Optional[date]:
+    """Return the earliest scrape_date to include, or None for all history."""
+    if days <= 0:
+        return None
+    return date.today() - timedelta(days=days)
+
+
+# ------------------------------------------------------------------
+# Shared: last scraped indicator (R15)
+# ------------------------------------------------------------------
+
+@cache.memoize(timeout=300)
+def get_last_scraped() -> dict:
+    """Return the most recent completed scrape run info."""
+    from app.db import get_conn
+    try:
+        with get_conn() as conn:
+            cur = conn.cursor()
+            cur.execute(
+                """
+                SELECT retailer, completed_at
+                FROM scrape_runs
+                WHERE status = 'complete'
+                ORDER BY completed_at DESC
+                LIMIT 1
+                """
+            )
+            row = cur.fetchone()
+            if not row:
+                return {"retailer": None, "completed_at": None}
+            return {"retailer": row[0], "completed_at": row[1]}
+    except Exception:
+        return {"retailer": None, "completed_at": None}
+
+
+# ------------------------------------------------------------------
+# Price Positioning tab (R17)
+# ------------------------------------------------------------------
+
+@cache.memoize(timeout=3600)
+def get_latest_price_per_oz() -> pd.DataFrame:
+    """Most recent price_per_oz per listing (all retailers)."""
+    from app.db import get_conn
+    try:
+        with get_conn() as conn:
+            return pd.read_sql(
+                """
+                SELECT
+                    v.brand_name,
+                    v.product_name,
+                    v.retailer,
+                    v.price_cents / 100.0          AS current_price,
+                    v.price_per_oz,
+                    v.scraped_date,
+                    v.is_oos
+                FROM v_latest_snapshot_per_product v
+                WHERE v.price_per_oz IS NOT NULL
+                ORDER BY v.brand_name, v.retailer
+                """,
+                conn,
+            )
+    except Exception:
+        return pd.DataFrame()
+
+
+# ------------------------------------------------------------------
+# Promo Activity tab (R18–R19)
+# ------------------------------------------------------------------
+
+@cache.memoize(timeout=3600)
+def get_promo_events(days: int = 30) -> pd.DataFrame:
+    """All promo events (badge or price-drop) within the date window."""
+    from app.db import get_conn
+    cutoff = _date_cutoff(days)
+    try:
+        with get_conn() as conn:
+            params: list = []
+            where = "WHERE (v.has_promo_badge OR v.price_drop_promo)"
+            if cutoff:
+                where += " AND v.scraped_date >= %s"
+                params.append(cutoff)
+            return pd.read_sql(
+                f"""
+                SELECT
+                    v.brand_name,
+                    v.product_name,
+                    v.retailer,
+                    v.scraped_date,
+                    v.has_promo_badge,
+                    v.price_drop_promo,
+                    v.price_cents / 100.0              AS current_price,
+                    v.sale_price_cents / 100.0         AS sale_price
+                FROM v_promo_events v
+                {where}
+                ORDER BY v.brand_name, v.scraped_date
+                """,
+                conn,
+                params=params if params else None,
+            )
+    except Exception:
+        return pd.DataFrame()
+
+
+@cache.memoize(timeout=3600)
+def get_promo_summary(days: int = 30) -> pd.DataFrame:
+    """Aggregate promo event count and avg depth per brand/retailer."""
+    from app.db import get_conn
+    cutoff = _date_cutoff(days)
+    try:
+        with get_conn() as conn:
+            params: list = []
+            where = "WHERE (ps.has_promo_badge OR ps.price_drop_promo)"
+            if cutoff:
+                where += " AND ps.scraped_date >= %s"
+                params.append(cutoff)
+            return pd.read_sql(
+                f"""
+                SELECT
+                    b.canonical_name                AS brand_name,
+                    rl.retailer,
+                    COUNT(*)                        AS promo_events,
+                    AVG(
+                        CASE
+                        WHEN ps.sale_price_cents IS NOT NULL AND ps.sale_price_cents > 0
+                        THEN (ps.sale_price_cents - ps.price_cents)::float / ps.sale_price_cents * 100.0
+                        END
+                    )                               AS avg_promo_depth_pct
+                FROM price_snapshots ps
+                JOIN retailer_listings rl ON rl.id = ps.listing_id
+                JOIN products p ON p.id = rl.product_id
+                JOIN brands b ON b.id = p.brand_id
+                {where}
+                GROUP BY b.canonical_name, rl.retailer
+                ORDER BY promo_events DESC
+                """,
+                conn,
+                params=params if params else None,
+            )
+    except Exception:
+        return pd.DataFrame()
+
+
+# ------------------------------------------------------------------
+# OOS Tracker tab (R20–R21)
+# ------------------------------------------------------------------
+
+@cache.memoize(timeout=3600)
+def get_oos_events(days: int = 30) -> pd.DataFrame:
+    """All OOS events within the date window."""
+    from app.db import get_conn
+    cutoff = _date_cutoff(days)
+    try:
+        with get_conn() as conn:
+            params: list = []
+            where = "WHERE v.is_oos = TRUE"
+            if cutoff:
+                where += " AND v.scraped_date >= %s"
+                params.append(cutoff)
+            return pd.read_sql(
+                f"""
+                SELECT
+                    v.brand_name,
+                    v.product_name,
+                    v.retailer,
+                    v.scraped_date,
+                    v.oos_signal
+                FROM v_oos_events v
+                {where}
+                ORDER BY v.brand_name, v.scraped_date
+                """,
+                conn,
+                params=params if params else None,
+            )
+    except Exception:
+        return pd.DataFrame()
+
+
+@cache.memoize(timeout=3600)
+def get_cinderhaven_oos_days(days: int = 30) -> int:
+    """Count of OOS days for Cinderhaven in the date window."""
+    from app.db import get_conn
+    cutoff = _date_cutoff(days)
+    try:
+        with get_conn() as conn:
+            cur = conn.cursor()
+            params: list = ["Cinderhaven"]
+            where = "AND b.canonical_name = %s AND ps.is_oos = TRUE"
+            if cutoff:
+                where += " AND ps.scraped_date >= %s"
+                params.append(cutoff)
+            cur.execute(
+                f"""
+                SELECT COUNT(DISTINCT ps.scraped_date)
+                FROM price_snapshots ps
+                JOIN retailer_listings rl ON rl.id = ps.listing_id
+                JOIN products p ON p.id = rl.product_id
+                JOIN brands b ON b.id = p.brand_id
+                WHERE 1=1 {where}
+                """,
+                params,
+            )
+            row = cur.fetchone()
+            return int(row[0]) if row else 0
+    except Exception:
+        return 0
+
+
+# ------------------------------------------------------------------
+# Assortment Monitor tab (R22)
+# ------------------------------------------------------------------
+
+@cache.memoize(timeout=3600)
+def get_assortment_changes() -> pd.DataFrame:
+    """Products new or absent comparing latest vs prior scrape run."""
+    from app.db import get_conn
+    try:
+        with get_conn() as conn:
+            return pd.read_sql(
+                """
+                WITH runs AS (
+                    SELECT id, started_at,
+                           ROW_NUMBER() OVER (ORDER BY started_at DESC) AS rn
+                    FROM scrape_runs
+                    WHERE status = 'complete'
+                ),
+                latest_run  AS (SELECT id FROM runs WHERE rn = 1),
+                prior_run   AS (SELECT id FROM runs WHERE rn = 2),
+                latest_listings AS (
+                    SELECT DISTINCT ps.listing_id
+                    FROM price_snapshots ps
+                    WHERE ps.scrape_run_id = (SELECT id FROM latest_run)
+                ),
+                prior_listings AS (
+                    SELECT DISTINCT ps.listing_id
+                    FROM price_snapshots ps
+                    WHERE ps.scrape_run_id = (SELECT id FROM prior_run)
+                )
+                SELECT
+                    b.canonical_name    AS brand_name,
+                    p.canonical_name    AS product_name,
+                    rl.retailer,
+                    rl.first_seen_at,
+                    rl.last_seen_at,
+                    CASE
+                        WHEN ll.listing_id IS NOT NULL AND pl.listing_id IS NULL
+                            THEN 'New Entry'
+                        WHEN ll.listing_id IS NULL AND pl.listing_id IS NOT NULL
+                            THEN 'Possible Delist'
+                    END AS status
+                FROM retailer_listings rl
+                JOIN products p ON p.id = rl.product_id
+                JOIN brands b ON b.id = p.brand_id
+                LEFT JOIN latest_listings ll ON ll.listing_id = rl.id
+                LEFT JOIN prior_listings  pl ON pl.listing_id = rl.id
+                WHERE (ll.listing_id IS NULL) != (pl.listing_id IS NULL)
+                ORDER BY status, b.canonical_name
+                """,
+                conn,
+            )
+    except Exception:
+        return pd.DataFrame()
+
+
+# ------------------------------------------------------------------
+# Review Pulse tab (R23)
+# ------------------------------------------------------------------
+
+@cache.memoize(timeout=3600)
+def get_review_trends(days: int = 30) -> pd.DataFrame:
+    """Star rating and review count per brand per date."""
+    from app.db import get_conn
+    cutoff = _date_cutoff(days)
+    try:
+        with get_conn() as conn:
+            params: list = []
+            where = "WHERE ps.star_rating IS NOT NULL"
+            if cutoff:
+                where += " AND ps.scraped_date >= %s"
+                params.append(cutoff)
+            return pd.read_sql(
+                f"""
+                SELECT
+                    b.canonical_name    AS brand_name,
+                    rl.retailer,
+                    ps.scraped_date,
+                    AVG(ps.star_rating) AS avg_star_rating,
+                    MAX(ps.review_count) AS max_review_count
+                FROM price_snapshots ps
+                JOIN retailer_listings rl ON rl.id = ps.listing_id
+                JOIN products p ON p.id = rl.product_id
+                JOIN brands b ON b.id = p.brand_id
+                {where}
+                GROUP BY b.canonical_name, rl.retailer, ps.scraped_date
+                ORDER BY b.canonical_name, ps.scraped_date
+                """,
+                conn,
+                params=params if params else None,
+            )
+    except Exception:
+        return pd.DataFrame()
