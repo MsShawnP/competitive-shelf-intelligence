@@ -17,7 +17,10 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from typing import Optional
+
+import requests as _requests
 
 from src.scrapers.base import (
     BaseProductScraper,
@@ -42,37 +45,75 @@ _PRODUCT_PATHS = [
 
 
 class WalmartScraper(BaseProductScraper):
-    """Scrapes a Walmart product page using __NEXT_DATA__ JSON parsing."""
+    """Scrapes a Walmart product page using __NEXT_DATA__ JSON parsing.
+
+    Transport selection (checked in fetch_product):
+      SCRAPERAPI_KEY set  → HTTP request via ScraperAPI (handles anti-bot)
+      SCRAPERAPI_KEY unset → Playwright (local dev / fixture-based testing only)
+
+    Walmart's bot detection blocks plain Playwright from residential and data-
+    center IPs. ScraperAPI is the production transport (DECISIONS.md).
+    """
+
+    def __enter__(self) -> "WalmartScraper":
+        if not os.getenv("SCRAPERAPI_KEY"):
+            super().__enter__()
+        return self
+
+    def __exit__(self, *args) -> None:
+        if not os.getenv("SCRAPERAPI_KEY"):
+            super().__exit__(*args)
 
     def fetch_product(self, listing_id: int, url: str, retailer_id: str) -> ScrapedProduct:
         """Fetch and parse a Walmart product page.
 
-        Args:
-            listing_id: DB id for this retailer listing (used in error logging).
-            url: Full Walmart product URL.
-            retailer_id: Walmart item ID (numeric string).
-
-        Returns:
-            ScrapedProduct with all available fields populated.
+        Uses ScraperAPI when SCRAPERAPI_KEY is set; falls back to Playwright.
 
         Raises:
             RobotsDisallowedError: robots.txt disallows the URL.
             BlockDetectedError: Walmart blocked the request — stop the run.
-            ParseFailureError: Required fields missing — log and skip this product (R6).
+            ParseFailureError: Required fields missing — log and skip (R6).
         """
         self.check_robots(url)
-        page = self.fetch_page(url)
+        if os.getenv("SCRAPERAPI_KEY"):
+            product = self._fetch_via_scraperapi(url, retailer_id)
+        else:
+            page = self.fetch_page(url)
+            try:
+                product = self._parse_page(page, url, retailer_id)
+            finally:
+                page.close()
+        logger.info(
+            "Scraped Walmart listing %s: %s @ $%.2f",
+            retailer_id,
+            product.product_name,
+            product.current_price or 0,
+        )
+        return product
+
+    def _fetch_via_scraperapi(self, url: str, retailer_id: str) -> ScrapedProduct:
+        """Fetch Walmart page HTML via ScraperAPI, then parse with parse_html().
+
+        ScraperAPI renders the page in a real browser and handles anti-bot.
+        We still enforce our rate limit so we don't hammer their endpoint.
+        """
+        self._rate_limit()
+        api_key = os.getenv("SCRAPERAPI_KEY")
         try:
-            product = self._parse_page(page, url, retailer_id)
-            logger.info(
-                "Scraped Walmart listing %s: %s @ $%.2f",
-                retailer_id,
-                product.product_name,
-                product.current_price or 0,
+            resp = _requests.get(
+                "https://api.scraperapi.com/",
+                params={
+                    "api_key": api_key,
+                    "url": url,
+                    "render": "true",
+                    "country_code": "us",
+                },
+                timeout=90,
             )
-            return product
-        finally:
-            page.close()
+            resp.raise_for_status()
+        except _requests.RequestException as exc:
+            raise ParseFailureError(f"ScraperAPI request failed for {url}: {exc}")
+        return self.parse_html(resp.text, url, retailer_id)
 
     # ------------------------------------------------------------------
     # Parsing helpers (also called directly in tests via saved HTML)

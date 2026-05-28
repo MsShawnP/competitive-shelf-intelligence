@@ -35,8 +35,16 @@ Each entry:
 
 ## Scraping & Acquisition
 
-[Decisions about scraper design, retailer coverage, rate limits, ethical
-handling, anti-bot strategies]
+### 2026-05-28 — Use ScraperAPI for Walmart; keep Playwright for Amazon
+- **Why:** Plain Playwright (+ playwright-stealth v2) is blocked by Walmart's
+  server-side fingerprinting on both data-center and default IPs. Two attempts
+  failed in session 1 — status 200 redirect to `/blocked`. Walmart detects
+  headless Chromium at the TLS/network layer before any JS stealth patches run.
+  ScraperAPI routes through real browsers on residential IPs and is the lowest-
+  friction fix that preserves our HTML parsing logic unchanged.
+- **Scope:** WalmartScraper only. Amazon is less aggressive; Playwright stays.
+- **Do not:** Remove the Playwright fallback from WalmartScraper — it keeps
+  fixture-based tests fast without needing ScraperAPI credits.
 
 ---
 

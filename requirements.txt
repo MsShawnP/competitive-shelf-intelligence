@@ -13,5 +13,6 @@ openpyxl>=3.1,<4.0
 # Scraping
 playwright>=1.49,<2.0
 playwright-stealth>=2.0,<3.0
+requests>=2.31,<3.0
 click>=8.1,<9.0
 pyyaml>=6.0,<7.0

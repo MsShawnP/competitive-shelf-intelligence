@@ -21,7 +21,11 @@ stack up against them?
 
 TBD — scoped during /clarify and /ce:brainstorm.
 
-(Expected: Python · Playwright · Postgres · dbt · Streamlit · pandas · Plotly)
+(Expected: Python · Playwright · Postgres · Dash · Plotly · pandas)
+
+Notes:
+- Dash chosen over Streamlit — already deployed on Fly.io in retail-velocity-decision-tool
+- dbt excluded from v1 — plain SQL views sufficient for one dashboard consumer
 
 ## Project files
 
