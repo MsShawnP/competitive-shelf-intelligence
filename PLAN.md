@@ -36,7 +36,7 @@ food brand's price, promo, and availability stack up against them?
 - Public GitHub repo
 
 **Out:**
-- Lead-gen assets (landing pages, social posts, email sequences) — separate project
+- Lead-gen assets (landing pages, social posts, email sequences) — out of scope
 - Cinderhaven Data Platform integration — standalone Postgres only
 - Automated scraping schedule — manual runs for v1
 - 90-day competitive audit as a content piece — evaluated later after data accumulates

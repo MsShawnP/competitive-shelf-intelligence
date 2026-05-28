@@ -90,6 +90,19 @@ Each entry:
 - **Why:** Dash requires all callbacks to have at least one Input. Using a single shared Store as the "page loaded" signal prevents duplicating `dcc.Interval` or `dcc.Location` wiring in every tab module, and keeps each tab module independent of layout IDs outside its own scope.
 - **Scope:** All five tab `register_callbacks()` functions.
 
+### 2026-05-28 — WalmartScraper transport priority: ScraperAPI → camoufox → Google Shopping → plain Playwright
+- **Why:** ScraperAPI removed its free tier ($49/month minimum). camoufox (Firefox stealth) added as transport 2; Google Shopping requests fallback added as transport 3. Neither camoufox nor Google Shopping work from data center IPs (Fly.io, AWS, etc.) — both are still blocked at the IP layer. Plain Playwright remains as transport 4 for fixture tests only.
+- **Scope:** `src/scrapers/walmart.py`
+- **Do not:** Expect camoufox or Google Shopping to return real data from any hosted environment without a residential proxy. For a paying client, set `SCRAPERAPI_KEY` (transport 1 activates) or add a `PROXY_URL` residential proxy.
+
+### 2026-05-28 — Demo uses synthetic competitor price history
+- **Why:** Walmart and Amazon both block scrapes from Fly.io data center IPs at the network layer regardless of browser stealth. Rather than delay the demo, seeded 30-day price history for all 5 competitors at market-realistic prices (Truff $17.99/6oz, Marie Sharp's $6.99/5oz, Dave's $6.49/5oz, Yellowbird $7.49/9.8oz, Melinda's $4.99/5oz) using `scripts/load_synthetic_competitors.py`.
+- **Scope:** Demo database only. Real scraping replaces synthetic data when a client engages and a proxy key is obtained.
+
+### 2026-05-28 — Lead-gen assets out of scope for this project
+- **Why:** Explicitly removed from the optional follow-up arc. Kept as a separate concern that does not belong in this codebase.
+- **Scope:** PLAN.md "Out" section.
+
 ---
 
 ## Reversed / Superseded
