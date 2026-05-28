@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/playwright/python:v1.49.0-noble
+FROM mcr.microsoft.com/playwright/python:v1.60.0-noble
 
 # playwright chromium + system deps are pre-installed in this image
 # tini is also pre-installed for zombie-process prevention
