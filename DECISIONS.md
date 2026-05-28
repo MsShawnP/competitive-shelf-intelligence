@@ -105,6 +105,18 @@ Each entry:
 
 ---
 
+### 2026-05-28 — Accept autocommit partial state as acceptable for v1
+- **Why:** `get_conn()` uses `conn.autocommit = True`. Multi-step scrape writes (brand → product → listing → snapshot) each commit individually. A mid-run crash leaves earlier rows committed with no snapshot. All write operations use `ON CONFLICT DO NOTHING` / `ON CONFLICT DO UPDATE`, so retries are idempotent and the partial state resolves on the next run. Not worth adding explicit transaction management for v1.
+- **Scope:** `src/db.py`, `scrape.py`. Revisit if the pipeline ever requires atomic multi-table writes.
+
+### 2026-05-28 — Accept rate-limit-per-instance (not process-global) for v1
+- **Why:** Rate limiting in `base.py` uses `self._last_request_time` (instance-level). Two concurrent scraper processes would each enforce their own minimum delay, doubling the effective request rate. Acceptable for v1 because there are no scheduled runs yet and manual runs are never concurrent. Revisit when cron scheduling is added.
+- **Scope:** `src/scrapers/base.py`. Fix: use a shared file lock or named semaphore when scheduling is implemented.
+
+### 2026-05-28 — Accept SSRF risk in config URL handling for v1 (internal tool)
+- **Why:** URLs from `config/products.yaml` are passed to ScraperAPI and Playwright with no domain allowlist. Risk is low because `products.yaml` is a committed, reviewed file in a private repo with no external write access. A URL allowlist (restrict to `walmart.com`, `amazon.com`) is the right fix but deferred to P2+ given the internal-tool context.
+- **Scope:** `scrape.py`, `src/scrapers/walmart.py`, `src/scrapers/base.py`.
+
 ## Reversed / Superseded
 
 When a decision is overturned:

@@ -97,3 +97,37 @@ then /office-hours, /plan-ceo-review, /plan-eng-review before building.
 - When a client engages: obtain ScraperAPI or Bright Data residential proxy, set SCRAPERAPI_KEY secret, run `python scrape.py` on cron via `flyctl schedule` or Fly Machines scheduled tasks.
 
 ---
+
+## 2026-05-28 — Code review complete; P1/P2 bugs queued
+
+**Started from:** Demo live. Full 5-reviewer code review run (correctness, maintainability, testing, security, reliability).
+
+**Did:**
+- Ran 5 parallel compound-engineering review agents
+- Synthesized findings into P1/P2/P3/P4 tiers
+- Logged confirmed bugs to FAILURES.md, accepted-risk decisions to DECISIONS.md
+- Updated PLAN.md with the next arc (fix P1+P2 bugs)
+
+**Review summary:**
+
+P1 — wrong behavior today (all three confirmed at 100% confidence):
+- **F4** `app/data.py:152` — `get_promo_summary` SQL alias bug; Promo summary tab always empty
+- **F1** `app/data.py:164` — promo depth formula inverted; negative % for synthetic data, 0% for Amazon
+- **REL-001** `scrape.py:91` — no try/finally on scrape_run lifecycle; crashed run stays `'running'` forever
+
+P2 — real bugs, lower urgency:
+- **F5** `walmart.py:342` — OOS miss when `availabilityStatus` absent + no cart button
+- **REL-004** `app/data.py` — all exceptions swallowed silently, no logging
+- **REL-005** `base.py:185` — `check_robots()` hangs with no timeout
+- **SEC-002** `entity_resolution.py:120` — f-string column name in SQL JOIN; use `psycopg2.sql.Identifier`
+- **SEC-007** `app/run.py:47` — `debug=True` hardcoded; gate on `FLASK_DEBUG`
+
+P3 — polish (separate session): CHART_PALETTE shadow, dead imports, FONT_SERIF inconsistency, OWN_BRAND constant, dead listing_id param.
+
+Accepted risks: autocommit partial state, rate-limit per-instance, SSRF via config URLs (all documented in DECISIONS.md).
+
+**Git state:** Clean on main. PLAN.md, FAILURES.md, DECISIONS.md updated.
+
+**Next session starts here:** Fix P1 bugs first (`app/data.py`, `scrape.py`), then P2. All three P1 bugs are mechanical and can be done in one commit. Run tests after each fix.
+
+---

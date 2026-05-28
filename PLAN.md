@@ -58,14 +58,31 @@ food brand's price, promo, and availability stack up against them?
 - [x] Dashboard deployed and live on Fly.io (Dockerfile + fly.toml complete; actual flyctl deploy pending)
 - [x] README documents how to run a scrape manually and view the dashboard
 
-## What's left before going live
+## Next arc — code review fixes (2026-05-28)
 
-1. **Fill in competitor URLs** — research real Walmart/Amazon URLs for each brand in `config/products.yaml` and replace all `REPLACE_WITH_*` values
-2. **Provision Fly Postgres** — `flyctl postgres create`, attach, `psql -f db/schema.sql`
-3. **Set Fly secrets** — `flyctl secrets set SCRAPERAPI_KEY=...`
-4. **Run first scrape** — `python scrape.py`
-5. **Load Cinderhaven data** — `python scripts/load_synthetic.py`
-6. **Deploy** — `flyctl deploy`
+Code review complete. Three confirmed P1 bugs to fix, five P2 issues, plus maintainability polish.
+
+### P1 — Fix immediately (wrong behavior today)
+
+- [ ] **F4** `app/data.py:152` — `get_promo_summary` WHERE uses `v.` alias but table is `ps` → Promo summary tab always empty. Fix: rename `v.` → `ps.` in WHERE.
+- [ ] **F1** `app/data.py:164` — promo depth formula `(sale−price)/sale` goes negative for synthetic data, 0% for Amazon. Fix: `(price_cents − sale_price_cents) / price_cents`.
+- [ ] **REL-001** `scrape.py:91–94` — no try/finally around scrape_run lifecycle. Crashed run stays `'running'` forever. Fix: wrap `_run_scrape` call in try/finally that marks run `'failed'`.
+
+### P2 — Fix in same session
+
+- [ ] **F5** `walmart.py:342` — Walmart OOS miss when `availabilityStatus` absent; `availability != ''` guard blocks no-cart signal.
+- [ ] **REL-004** `app/data.py` — no `logger.exception` in any `except Exception` block; failures invisible.
+- [ ] **REL-005** `base.py:185` — `check_robots()` hangs indefinitely; `RobotFileParser.read()` has no timeout.
+- [ ] **SEC-002** `entity_resolution.py:120` — f-string column name in SQL JOIN; use `psycopg2.sql.Identifier` instead.
+- [ ] **SEC-007** `app/run.py:47` — `debug=True` hardcoded; gate on `FLASK_DEBUG` env var.
+
+### P3 — Polish pass (separate session)
+
+- M01: `CHART_PALETTE` shadowed in `review_pulse.py`
+- M02: Dead imports in `scrape.py` (`hashlib`, `datetime`, `timezone`)
+- M05: `FONT_SERIF` unused constant; inconsistent serif stacks across tabs
+- M06: `'Cinderhaven'` hardcoded in 3 modules — define `OWN_BRAND` constant
+- M09: `listing_id` param on scrapers always `0`, never used — remove
 
 ---
 

@@ -49,6 +49,48 @@ IPs, transparent to our HTML parsing code.
 
 ---
 
+### 2026-05-28 — `get_promo_summary` Promo Activity summary always empty (SQL alias bug)
+
+**Attempted:** Dashboard Promo Activity tab renders summary panel.
+
+**Why it didn't work:** `get_promo_summary` in `app/data.py:152` constructs `WHERE (v.has_promo_badge OR v.price_drop_promo)` but the FROM clause aliases the table as `ps` (`FROM price_snapshots ps`), not `v`. Postgres raises `ERROR: missing FROM-clause entry for table "v"`, which the bare `except Exception` at line 179 swallows silently. Every request returns an empty DataFrame and the summary panel shows nothing.
+
+**What we tried instead:** Fix is pending (next session). Rename `v.` → `ps.` in the WHERE clause.
+
+**Status:** Confirmed bug, fix queued (PLAN.md P1/F4).
+
+**Tags:** dashboard, promo, sql, alias, silent-failure
+
+---
+
+### 2026-05-28 — Promo depth formula inverted; produces negative values for synthetic data
+
+**Attempted:** Promo Activity tab promo depth percentage.
+
+**Why it didn't work:** Formula in `app/data.py:164` is `(sale_price_cents - price_cents) / sale_price_cents`. For synthetic data where `sale_price_cents = price * 0.85` (the discounted price, less than `price_cents`), the numerator is negative, producing a negative depth percentage. For Amazon rows, the scraper sets `sale_price` equal to `current_price`, making the numerator zero and depth always 0%.
+
+**What we tried instead:** Fix is pending. Correct formula is `(price_cents - sale_price_cents) / price_cents * 100`.
+
+**Status:** Confirmed bug, fix queued (PLAN.md P1/F1).
+
+**Tags:** dashboard, promo, formula, data-quality
+
+---
+
+### 2026-05-28 — scrape_run row stays permanently `'running'` when scraper crashes
+
+**Attempted:** Reliable scrape run lifecycle tracking.
+
+**Why it didn't work:** `scrape.py:91–94` calls `_start_scrape_run()`, `_run_scrape()`, `_finish_scrape_run()` in a flat sequence with no try/finally. Any unhandled exception (OOM, DB error, KeyboardInterrupt) bypasses `_finish_scrape_run()`. The `scrape_runs` row stays in `status='running'` permanently. Dashboard `get_last_scraped()` and `get_assortment_changes()` both filter on `status='complete'` and silently ignore stuck runs.
+
+**What we tried instead:** Fix is pending. Wrap `_run_scrape` call in try/finally that marks the run `'failed'` on any exception before re-raising.
+
+**Status:** Confirmed bug, fix queued (PLAN.md P1/REL-001).
+
+**Tags:** scraper, reliability, scrape-run, lifecycle
+
+---
+
 ### 2026-05-28 — camoufox (Firefox stealth) blocked by Walmart from Fly.io data center
 
 **Attempted:** camoufox v0.4.11 with `os="windows"`, `block_webrtc=True`, `headless=True` launched from Fly.io machine (IAD region, data center IP).
