@@ -7,84 +7,80 @@
 #      Amazon ASIN is the 10-character ID in the URL (/dp/XXXXXXXXXX)
 #   4. Add a new entry below following the same format
 #   5. UPC is optional but helps link the same product across retailers
-#
-# POC GATE: Only the first product (walmart) is needed to validate Walmart scraping.
-# Replace the placeholder URL with a real Walmart product URL before running the POC.
 
 products:
   # --- Yellowbird ---
   - name: "Yellowbird Blue Agave Sriracha Hot Sauce 9.8 oz"
     brand: "Yellowbird"
     retailer: walmart
-    url: "REPLACE_WITH_REAL_WALMART_URL"
-    # Example URL format: https://www.walmart.com/ip/Yellowbird-Sriracha/XXXXXXXXX
-    retailer_id: "REPLACE_WITH_ITEM_ID"
-    upc: ""  # fill in if known
+    url: "https://www.walmart.com/ip/Yellowbird-Sauce-Agave-Blue-Sriracha-9-8-Oz/794454518"
+    retailer_id: "794454518"
+    upc: "856262005167"
 
   - name: "Yellowbird Blue Agave Sriracha Hot Sauce 9.8 oz"
     brand: "Yellowbird"
     retailer: amazon
-    url: "REPLACE_WITH_REAL_AMAZON_URL"
-    # Example URL format: https://www.amazon.com/dp/XXXXXXXXXX
-    retailer_id: "REPLACE_WITH_ASIN"
-    upc: ""
+    url: "https://www.amazon.com/Yellowbird-Sauce-Condiment-Agave-Sriracha/dp/B01NCF5ULG"
+    retailer_id: "B01NCF5ULG"
+    upc: "856262005167"
 
   # --- Truff ---
   - name: "TRUFF Original Black Truffle Hot Sauce 6 oz"
     brand: "Truff"
     retailer: walmart
-    url: "REPLACE_WITH_REAL_WALMART_URL"
-    retailer_id: "REPLACE_WITH_ITEM_ID"
-    upc: ""
+    url: "https://www.walmart.com/ip/TRUFF-Original-Black-Truffle-Hot-Sauce-6-oz/620880109"
+    retailer_id: "620880109"
+    upc: "710051998057"
 
   - name: "TRUFF Original Black Truffle Hot Sauce 6 oz"
     brand: "Truff"
     retailer: amazon
-    url: "REPLACE_WITH_REAL_AMAZON_URL"
-    retailer_id: "REPLACE_WITH_ASIN"
-    upc: ""
+    url: "https://www.amazon.com/TRUFF-Gourmet-Peppers-Truffle-Experience/dp/B07HMJWCNL"
+    retailer_id: "B07HMJWCNL"
+    upc: "710051998057"
 
   # --- Melinda's ---
-  - name: "Melinda's Original Habanero Pepper Sauce 12 oz"
+  # Note: Original Habanero only comes in 5 oz — no 12 oz SKU exists.
+  - name: "Melinda's Original Habanero Hot Sauce 5 oz"
     brand: "Melinda's"
     retailer: walmart
-    url: "REPLACE_WITH_REAL_WALMART_URL"
-    retailer_id: "REPLACE_WITH_ITEM_ID"
-    upc: ""
+    url: "https://www.walmart.com/ip/Melinda-s-Original-Habanero-Hot-Sauce/927006219"
+    retailer_id: "927006219"
+    upc: "736924182811"
 
-  - name: "Melinda's Original Habanero Pepper Sauce 12 oz"
+  - name: "Melinda's Original Habanero Hot Sauce 5 oz"
     brand: "Melinda's"
     retailer: amazon
-    url: "REPLACE_WITH_REAL_AMAZON_URL"
-    retailer_id: "REPLACE_WITH_ASIN"
-    upc: ""
+    url: "https://www.amazon.com/dp/B005HJ038S"
+    retailer_id: "B005HJ038S"
+    upc: "736924182811"
 
   # --- Dave's Gourmet ---
   - name: "Dave's Gourmet Original Insanity Hot Sauce 5 oz"
     brand: "Dave's Gourmet"
     retailer: walmart
-    url: "REPLACE_WITH_REAL_WALMART_URL"
-    retailer_id: "REPLACE_WITH_ITEM_ID"
-    upc: ""
+    url: "https://www.walmart.com/ip/Dave-s-Gourmet-Insanity-Hot-Sauce-5-Oz/30955208"
+    retailer_id: "30955208"
+    upc: "753469000011"
 
   - name: "Dave's Gourmet Original Insanity Hot Sauce 5 oz"
     brand: "Dave's Gourmet"
     retailer: amazon
-    url: "REPLACE_WITH_REAL_AMAZON_URL"
-    retailer_id: "REPLACE_WITH_ASIN"
-    upc: ""
+    url: "https://www.amazon.com/dp/B0000DID5R"
+    retailer_id: "B0000DID5R"
+    upc: "753469000011"
 
   # --- Marie Sharp's ---
   - name: "Marie Sharp's Fiery Hot Habanero Pepper Sauce 5 oz"
     brand: "Marie Sharp's"
     retailer: walmart
-    url: "REPLACE_WITH_REAL_WALMART_URL"
-    retailer_id: "REPLACE_WITH_ITEM_ID"
+    url: "https://www.walmart.com/ip/Marie-Sharp-s-Fiery-Hot-Habanero-Pepper-Sauce/10448878"
+    retailer_id: "10448878"
     upc: ""
 
   - name: "Marie Sharp's Fiery Hot Habanero Pepper Sauce 5 oz"
     brand: "Marie Sharp's"
     retailer: amazon
-    url: "REPLACE_WITH_REAL_AMAZON_URL"
-    retailer_id: "REPLACE_WITH_ASIN"
+    url: "https://www.amazon.com/Marie-Sharps-Fiery-Habanero-Pepper/dp/B0014L1PPS"
+    retailer_id: "B0014L1PPS"
     upc: ""
