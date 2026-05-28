@@ -16,7 +16,6 @@ RUN mkdir -p /cache
 
 ENV PYTHONUNBUFFERED=1
 
-ENTRYPOINT ["/usr/bin/tini", "--"]
 # 1 worker: Playwright is not fork-safe.
 # Scrapers run as a separate CLI process (python scrape.py), not from gunicorn.
 CMD ["gunicorn", "--bind", "0.0.0.0:8050", "--workers", "1", "--timeout", "120", "app.run:server"]
