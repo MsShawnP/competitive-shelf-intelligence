@@ -96,4 +96,9 @@ Code review complete. Three confirmed P1 bugs to fix, five P2 issues, plus maint
 
 ## Improvement history
 
-<!-- Entries are added by /improve — don't delete this section -->
+### 2026-05-28 — Improvement pass
+- **Trigger:** User-initiated after project shipped
+- **What was reviewed:** Security, code quality, dead code, dependencies, documentation, git hygiene
+- **What was fixed:** Hardcoded credentials in 3 debug scripts; f-string SQL in 5 query functions; days param validation in 3 callbacks; security headers (X-Frame-Options, X-Content-Type-Options, Referrer-Policy); Flask secret key; generic /health error; PROXY_URL validation; LIMIT on unbounded queries; non-root Dockerfile user; deleted google_shopping.py and 2 POC scripts
+- **Deferred:** requirements.txt hash-pinning (needs pip-tools + pip-compile run); FLASK_SECRET_KEY Fly secret (manual step, noted above)
+- **Next review:** 2026-06-28
