@@ -93,6 +93,10 @@ python scrape.py --retailer all
 
 Schedule with a cron job or Fly scheduled machines once you're happy with the data quality.
 
+## Data contract
+
+Canonical Cinderhaven conformance — 50 SKUs across 5 product lines and 6 contracted retailers.
+
 ## Tests
 
 ```bash
@@ -120,3 +124,7 @@ app/
   run.py                   Dash entry point (gunicorn: app.run:server)
   tabs/                    One module per dashboard tab
 ```
+
+---
+
+Built by [Lailara LLC](https://lailarallc.com) — data hygiene and analytics consulting for specialty food brands scaling into national retail.
