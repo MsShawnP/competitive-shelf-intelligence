@@ -8,6 +8,13 @@ Positions a synthetic Cinderhaven brand at the real category median price.
 Delivers the competitive visibility that syndicated data (IRI/Nielsen) provides —
 at a fraction of the cost.
 
+**Live:** https://competitive.lailarallc.com
+
+## Data Contract
+
+**Cinderhaven canonical dataset:** 50 SKUs / 5 production lines / 6 retailers.
+**Scope:** This tool monitors competitive shelf positioning using Amazon as the competitive surface. It is not a full-catalog analysis of all Cinderhaven channels. Audits should not flag the single-channel focus as data drift.
+
 ## Stack
 
 Python · Playwright · BeautifulSoup · Postgres · Dash · Plotly · Fly.io
