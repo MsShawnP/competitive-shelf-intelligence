@@ -13,7 +13,7 @@ COPY . .
 
 # Create cache directory and non-root user for least-privilege execution
 RUN mkdir -p /cache && \
-    useradd -r -u 1001 -s /bin/false appuser && \
+    useradd -r -u 1002 -s /bin/false appuser && \
     chown -R appuser /app /cache
 
 USER appuser
