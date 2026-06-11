@@ -21,6 +21,7 @@ from flask import jsonify
 from app.callbacks import register_callbacks
 from app.data import cache, init_cache
 from app.layout import create_layout
+from lailara_frame import wrap
 
 app = Dash(
     __name__,
@@ -31,7 +32,12 @@ server = app.server
 server.secret_key = os.environ.get("FLASK_SECRET_KEY") or _secrets.token_hex(32)
 init_cache(server)
 
-app.layout = create_layout()
+app.layout = wrap(
+    create_layout(),
+    tool_name="Competitive Shelf Intelligence",
+    no_container=True,
+    footer_note="Data: publicly available product pages from Walmart, Amazon, and Instacart.",
+)
 register_callbacks(app)
 
 
