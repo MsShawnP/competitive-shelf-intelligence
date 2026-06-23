@@ -9,10 +9,10 @@ import plotly.graph_objects as go
 from dash import Input, Output, dcc, html
 
 from app.charts import base_chart_layout
-from app.components import empty_state, last_scraped_indicator
+from app.components import date_range_toggles, empty_state, last_scraped_indicator, register_date_range_callbacks
 from app.constants import (
     CANVAS, COLOR_OOS, DATE_RANGE_DEFAULT, DATE_RANGE_OPTIONS,
-    FONT_SANS, FONT_SERIF, GREY_LIGHT, INK, OWN_BRAND, TEXT_SEC,
+    FONT_SANS, FONT_SERIF, GREY_LIGHT, INK, OWN_BRAND, RED, TEXT_SEC,
 )
 
 _ALLOWED_DAYS = frozenset(o["value"] for o in DATE_RANGE_OPTIONS)
@@ -31,16 +31,7 @@ def layout() -> html.Div:
             style={"fontSize": "14px", "color": TEXT_SEC, "marginBottom": "0"},
         ),
         html.Div([
-            html.Div([
-                html.Span("Date range: ", style={"fontSize": "13px", "color": TEXT_SEC}),
-                dcc.RadioItems(
-                    id="oos-date-range",
-                    options=DATE_RANGE_OPTIONS,
-                    value=DATE_RANGE_DEFAULT,
-                    inline=True,
-                    style={"fontSize": "13px", "display": "inline-block", "marginLeft": "8px"},
-                ),
-            ], style={"marginBottom": "16px"}),
+            date_range_toggles("oos"),
             html.Div(id=CALLOUT_ID),
             dcc.Graph(id=HEATMAP_ID, config={"displayModeBar": False}),
         ], style={
@@ -54,10 +45,12 @@ def layout() -> html.Div:
 
 
 def register_callbacks(app) -> None:
+    register_date_range_callbacks(app, "oos")
+
     @app.callback(
         Output(HEATMAP_ID, "figure"),
         Output(CALLOUT_ID, "children"),
-        Input("oos-date-range", "value"),
+        Input("oos-date-range", "data"),
         Input("_refresh-trigger", "data"),
     )
     def update(days, _):
@@ -100,43 +93,47 @@ def _build_heatmap(df: pd.DataFrame) -> go.Figure:
 
 
 def _build_callout(days: int) -> html.Div:
-    """Lost-revenue callout for Cinderhaven (R21).
-
-    Only shown when CINDERHAVEN_DAILY_REVENUE env var is set to a positive value.
-    """
     try:
         daily_rate = float(os.environ.get("CINDERHAVEN_DAILY_REVENUE", 0))
     except (ValueError, TypeError):
         daily_rate = 0.0
 
     if daily_rate <= 0:
-        return html.Div()  # hidden when not configured
+        return html.Div()
 
     oos_days = get_cinderhaven_oos_days(days)
     lost = daily_rate * oos_days
 
     return html.Div(
-        [
-            html.Div(
-                [
-                    html.Span(f"{OWN_BRAND} estimated lost revenue",
-                              style={"fontSize": "12px", "color": "#9a9a9a", "display": "block"}),
-                    html.Span(f"${lost:,.0f}",
-                              style={"fontSize": "28px", "fontWeight": "700",
-                                     "color": "#ffffff", "display": "block"}),
-                    html.Span(f"over {oos_days} OOS day{'s' if oos_days != 1 else ''}",
-                              style={"fontSize": "13px", "color": "#d8d8d8"}),
-                ],
-                style={
-                    "background": "#1a1a1a",
-                    "borderRadius": "2px",
-                    "padding": "16px 24px",
-                    "marginBottom": "16px",
-                    "display": "inline-block",
-                    "minWidth": "260px",
-                },
-            )
-        ]
+        html.Div(
+            [
+                html.Span(
+                    f"{OWN_BRAND} estimated lost revenue",
+                    style={"fontSize": "12px", "color": TEXT_SEC, "display": "block"},
+                ),
+                html.Span(
+                    f"${lost:,.0f}",
+                    style={
+                        "fontSize": "28px", "fontWeight": "700",
+                        "color": RED, "display": "block",
+                    },
+                ),
+                html.Span(
+                    f"over {oos_days} OOS day{'s' if oos_days != 1 else ''}",
+                    style={"fontSize": "13px", "color": TEXT_SEC},
+                ),
+            ],
+            style={
+                "backgroundColor": "#ffffff",
+                "border": f"1px solid {GREY_LIGHT}",
+                "borderLeft": f"4px solid {RED}",
+                "borderRadius": "2px",
+                "padding": "16px 24px",
+                "marginBottom": "16px",
+                "display": "inline-block",
+                "minWidth": "260px",
+            },
+        ),
     )
 
 

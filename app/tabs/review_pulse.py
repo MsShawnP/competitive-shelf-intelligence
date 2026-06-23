@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, dcc, html
 
 from app.charts import base_chart_layout
-from app.components import empty_state, last_scraped_indicator
+from app.components import date_range_toggles, empty_state, last_scraped_indicator, register_date_range_callbacks
 from app.constants import (
     CANVAS, CHART_PALETTE, DATE_RANGE_DEFAULT, DATE_RANGE_OPTIONS,
     FONT_SANS, FONT_SERIF, GREY_LIGHT, INK, TEXT_SEC,
@@ -28,16 +28,7 @@ def layout() -> html.Div:
             style={"fontSize": "14px", "color": TEXT_SEC, "marginBottom": "0"},
         ),
         html.Div([
-            html.Div([
-                html.Span("Date range: ", style={"fontSize": "13px", "color": TEXT_SEC}),
-                dcc.RadioItems(
-                    id="review-date-range",
-                    options=DATE_RANGE_OPTIONS,
-                    value=DATE_RANGE_DEFAULT,
-                    inline=True,
-                    style={"fontSize": "13px", "display": "inline-block", "marginLeft": "8px"},
-                ),
-            ], style={"marginBottom": "16px"}),
+            date_range_toggles("review"),
             html.Div(id=CONTAINER_ID),
         ], style={
             "backgroundColor": "#ffffff",
@@ -50,9 +41,11 @@ def layout() -> html.Div:
 
 
 def register_callbacks(app) -> None:
+    register_date_range_callbacks(app, "review")
+
     @app.callback(
         Output(CONTAINER_ID, "children"),
-        Input("review-date-range", "value"),
+        Input("review-date-range", "data"),
         Input("_refresh-trigger", "data"),
     )
     def update(days, _):
@@ -65,7 +58,6 @@ def register_callbacks(app) -> None:
 
 
 def _build_charts(df: pd.DataFrame) -> list:
-    """One row per brand: star rating line chart + review count bar chart."""
     brands = sorted(df["brand_name"].unique())
     rows = []
 
