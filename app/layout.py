@@ -1,11 +1,10 @@
-"""Top-level Dash layout: header + dcc.Tabs with 5 tabs."""
+"""Top-level Dash layout: header + custom tab navigation with 5 tabs."""
 
 from __future__ import annotations
 
-import dash_bootstrap_components as dbc
 from dash import dcc, html
 
-from app.constants import CANVAS, CHICAGO, FONT_SANS, FONT_SERIF, GREY_LIGHT, INK, TEXT_SEC
+from app.constants import CANVAS, CHICAGO, FONT_SANS, FONT_SERIF, GREY_LIGHT, INK, TEXT_SEC, WHITE
 from app.tabs import (
     assortment_monitor,
     oos_tracker,
@@ -14,87 +13,113 @@ from app.tabs import (
     review_pulse,
 )
 
+TABS = [
+    ("Price Positioning", price_positioning.TAB_ID),
+    ("Promo Activity", promo_activity.TAB_ID),
+    ("OOS Tracker", oos_tracker.TAB_ID),
+    ("Assortment Monitor", assortment_monitor.TAB_ID),
+    ("Review Pulse", review_pulse.TAB_ID),
+]
+
 
 def create_layout() -> html.Div:
+    default_tab = TABS[0][1]
     return html.Div(
         style={"backgroundColor": CANVAS, "minHeight": "100vh", "fontFamily": FONT_SANS},
         children=[
-            # Hidden store to trigger initial data load
             dcc.Store(id="_refresh-trigger", data=1),
 
-            # Header
             html.Div(
-                [
-                    html.H1(
-                        "Competitive Shelf Intelligence",
-                        style={
-                            "fontFamily": FONT_SERIF,
-                            "fontWeight": "700",
-                            "fontSize": "26px",
-                            "color": INK,
-                            "margin": "0 0 4px 0",
-                        },
-                    ),
-                    html.P(
-                        "Pricing · Promotions · Out-of-Stock · Assortment · Reviews",
-                        style={
-                            "fontFamily": FONT_SANS,
-                            "fontSize": "13px",
-                            "color": TEXT_SEC,
-                            "letterSpacing": "0.04em",
-                            "textTransform": "uppercase",
-                            "margin": "0",
-                        },
-                    ),
-                ],
-                style={
-                    "padding": "24px 32px 16px",
-                    "borderBottom": f"1px solid {GREY_LIGHT}",
-                    "backgroundColor": CANVAS,
-                },
-            ),
-
-            # Tabs
-            dcc.Tabs(
-                id="main-tabs",
-                value=price_positioning.TAB_ID,
-                style={"borderBottom": f"1px solid {GREY_LIGHT}"},
-                colors={"border": GREY_LIGHT, "primary": CHICAGO, "background": CANVAS},
+                style={"maxWidth": "1200px", "margin": "0 auto", "padding": "0 24px"},
                 children=[
-                    dcc.Tab(
-                        label="Price Positioning",
-                        value=price_positioning.TAB_ID,
-                        children=price_positioning.layout(),
-                        style=_tab_style(),
-                        selected_style=_tab_selected_style(),
+                    # Page title section
+                    html.Div(
+                        [
+                            html.Div(
+                                "LAILARA LLC",
+                                style={
+                                    "fontSize": "11px",
+                                    "letterSpacing": "0.08em",
+                                    "textTransform": "uppercase",
+                                    "color": TEXT_SEC,
+                                    "marginBottom": "4px",
+                                    "fontFamily": FONT_SANS,
+                                    "fontWeight": "600",
+                                },
+                            ),
+                            html.H1(
+                                "Competitive Shelf Intelligence",
+                                style={
+                                    "fontFamily": FONT_SERIF,
+                                    "fontWeight": "700",
+                                    "fontSize": "26px",
+                                    "color": INK,
+                                    "margin": "0 0 4px 0",
+                                },
+                            ),
+                            html.P(
+                                "Pricing · Promotions · Out-of-Stock · Assortment · Reviews",
+                                style={
+                                    "fontFamily": FONT_SANS,
+                                    "fontSize": "13px",
+                                    "color": TEXT_SEC,
+                                    "letterSpacing": "0.04em",
+                                    "textTransform": "uppercase",
+                                    "margin": "0",
+                                },
+                            ),
+                        ],
+                        style={
+                            "padding": "24px 0 16px",
+                            "borderBottom": f"1px solid {GREY_LIGHT}",
+                        },
                     ),
-                    dcc.Tab(
-                        label="Promo Activity",
-                        value=promo_activity.TAB_ID,
-                        children=promo_activity.layout(),
-                        style=_tab_style(),
-                        selected_style=_tab_selected_style(),
+
+                    # Tab navigation
+                    html.Div(
+                        [
+                            html.Button(
+                                label,
+                                id=f"nav-{tab_id}",
+                                n_clicks=0,
+                                style=nav_style(tab_id == default_tab),
+                            )
+                            for label, tab_id in TABS
+                        ],
+                        style={
+                            "display": "flex",
+                            "gap": "24px",
+                            "borderBottom": f"1px solid {GREY_LIGHT}",
+                            "padding": "0",
+                            "backgroundColor": WHITE,
+                        },
                     ),
-                    dcc.Tab(
-                        label="OOS Tracker",
-                        value=oos_tracker.TAB_ID,
-                        children=oos_tracker.layout(),
-                        style=_tab_style(),
-                        selected_style=_tab_selected_style(),
+
+                    # Tab content panels
+                    html.Div(
+                        price_positioning.layout(),
+                        id=f"content-{price_positioning.TAB_ID}",
+                        style={"display": "block"},
                     ),
-                    dcc.Tab(
-                        label="Assortment Monitor",
-                        value=assortment_monitor.TAB_ID,
-                        children=assortment_monitor.layout(),
-                        style=_tab_style(),
-                        selected_style=_tab_selected_style(),
+                    html.Div(
+                        promo_activity.layout(),
+                        id=f"content-{promo_activity.TAB_ID}",
+                        style={"display": "none"},
                     ),
-                    dcc.Tab(
-                        label="Review Pulse",
-                        value=review_pulse.TAB_ID,
-                        children=review_pulse.layout(),
-                        style=_tab_style(),
-                        selected_style=_tab_selected_style(),
+                    html.Div(
+                        oos_tracker.layout(),
+                        id=f"content-{oos_tracker.TAB_ID}",
+                        style={"display": "none"},
+                    ),
+                    html.Div(
+                        assortment_monitor.layout(),
+                        id=f"content-{assortment_monitor.TAB_ID}",
+                        style={"display": "none"},
+                    ),
+                    html.Div(
+                        review_pulse.layout(),
+                        id=f"content-{review_pulse.TAB_ID}",
+                        style={"display": "none"},
                     ),
                 ],
             ),
@@ -102,22 +127,17 @@ def create_layout() -> html.Div:
     )
 
 
-def _tab_style() -> dict:
-    return {
+def nav_style(selected: bool = False) -> dict:
+    base = {
         "fontFamily": FONT_SANS,
         "fontSize": "14px",
-        "padding": "12px 20px",
-        "backgroundColor": CANVAS,
-        "color": TEXT_SEC,
+        "fontWeight": "600" if selected else "400",
+        "color": CHICAGO if selected else TEXT_SEC,
+        "padding": "12px 0",
+        "background": "none",
         "border": "none",
-        "borderBottom": f"2px solid transparent",
+        "borderBottom": f"3px solid {CHICAGO}" if selected else "3px solid transparent",
+        "cursor": "pointer",
+        "outline": "none",
     }
-
-
-def _tab_selected_style() -> dict:
-    return {
-        **_tab_style(),
-        "color": CHICAGO,
-        "fontWeight": "600",
-        "borderBottom": f"2px solid {CHICAGO}",
-    }
+    return base
