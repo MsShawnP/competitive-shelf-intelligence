@@ -57,35 +57,44 @@ def register_callbacks(app) -> None:
         return _build_charts(df)
 
 
-def _build_charts(df: pd.DataFrame) -> list:
+def _build_charts(df: pd.DataFrame) -> html.Div:
+    """Two-column grid of brand cards, each with stacked star + review charts."""
     brands = sorted(df["brand_name"].unique())
-    rows = []
+    cards = []
 
     for brand in brands:
         brand_df = df[df["brand_name"] == brand]
         rating_fig = _rating_line(brand, brand_df)
         review_fig = _review_bar(brand, brand_df)
 
-        rows.append(html.Div(
-            [
-                html.H4(
-                    brand,
-                    style={"fontFamily": FONT_SERIF,
-                           "fontWeight": "700", "fontSize": "16px",
-                           "marginBottom": "8px", "marginTop": "20px"},
-                ),
-                html.Div(
-                    [
-                        html.Div(dcc.Graph(figure=rating_fig, config={"displayModeBar": False}),
-                                 style={"flex": "1"}),
-                        html.Div(dcc.Graph(figure=review_fig, config={"displayModeBar": False}),
-                                 style={"flex": "1"}),
-                    ],
-                    style={"display": "flex", "gap": "16px"},
-                ),
-            ]
-        ))
-    return rows
+        cards.append(
+            html.Div(
+                [
+                    html.H4(brand, style={
+                        "fontFamily": FONT_SERIF, "fontWeight": "700",
+                        "fontSize": "15px", "margin": "0 0 4px 0", "color": INK,
+                    }),
+                    dcc.Graph(figure=rating_fig, config={"displayModeBar": False},
+                              style={"marginBottom": "0"}),
+                    dcc.Graph(figure=review_fig, config={"displayModeBar": False}),
+                ],
+                style={
+                    "backgroundColor": "#faf9f6",
+                    "border": "1px solid #e8e6e1",
+                    "borderRadius": "2px",
+                    "padding": "12px 12px 4px",
+                },
+            )
+        )
+
+    return html.Div(
+        cards,
+        style={
+            "display": "grid",
+            "gridTemplateColumns": "1fr 1fr",
+            "gap": "16px",
+        },
+    )
 
 
 def _rating_line(brand: str, df: pd.DataFrame) -> go.Figure:
