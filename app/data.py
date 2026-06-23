@@ -197,8 +197,7 @@ def get_oos_events(days: int = 30) -> pd.DataFrame:
                     v.brand_name,
                     v.product_name,
                     v.retailer,
-                    v.scraped_date,
-                    v.oos_signal
+                    v.scraped_date
                 FROM v_oos_events v
                 WHERE v.is_oos = TRUE
                   AND (%s::date IS NULL OR v.scraped_date >= %s)
