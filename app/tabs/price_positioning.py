@@ -72,7 +72,8 @@ def register_callbacks(app) -> None:
 
 
 def _build_figure(df: pd.DataFrame) -> go.Figure:
-    # Sort brands by average price per oz, highest first → top row
+    df = df.groupby(["brand_name", "retailer"], as_index=False)["price_per_oz"].mean()
+
     brand_order = (
         df.groupby("brand_name")["price_per_oz"]
         .mean()
