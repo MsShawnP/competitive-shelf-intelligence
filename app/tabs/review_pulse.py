@@ -135,7 +135,11 @@ def _review_bar(brand: str, df: pd.DataFrame) -> go.Figure:
             marker_color=CHART_PALETTE[i % len(CHART_PALETTE)],
             hovertemplate="%{x}: %{y:,} reviews<extra></extra>",
         ))
-    layout = base_chart_layout(height=220, y_title="Reviews", show_legend=True)
-    layout["margin"] = dict(l=50, r=20, t=30, b=40)
+    layout = base_chart_layout(height=160, y_title="Reviews", show_legend=True)
+    layout["margin"] = dict(l=36, r=8, t=28, b=28)
+    layout["legend"] = dict(
+        orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
+        font=dict(size=10, family=FONT_SANS),
+    )
     fig.update_layout(**layout)
     return fig
