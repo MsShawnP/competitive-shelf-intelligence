@@ -94,6 +94,22 @@ Code review complete. Three confirmed P1 bugs to fix, five P2 issues, plus maint
 
 ---
 
+## Arc — Visual overhaul + data fix (2026-06-23)
+
+- [x] Extend synthetic data to 90 days
+- [x] Add scrape runs for Assortment Monitor demo
+- [x] Fix promo/OOS flags in both loaders
+- [x] Fix RadioItems int coercion
+- [x] Apply Lailara Design System v2 (tab nav, cards, toggles, AG Grid, empty states)
+- [x] Reseed Fly Postgres
+- [x] Deploy
+- [x] Fix Price Positioning multi-product aggregation bug
+- [x] Fix OOS Tracker oos_signal column bug
+- [x] Fix Assortment Monitor Status column truncation
+- [x] Rewrite Review Pulse to 2-column card grid with compact charts
+
+---
+
 ## Improvement history
 
 ### 2026-05-28 — Improvement pass

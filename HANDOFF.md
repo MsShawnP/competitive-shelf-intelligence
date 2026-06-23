@@ -132,6 +132,59 @@ Accepted risks: autocommit partial state, rate-limit per-instance, SSRF via conf
 
 ---
 
+## 2026-06-23 — Visual overhaul + data fix + final tab fixes
+
+**Started from:** Demo live but stale (30-day data loaded 2026-05-28, now outside filter window). Dashboard unstyled vs Lailara Design System.
+
+**Did (across two continued sessions):**
+
+Part 1 — Data fix:
+- Extended synthetic data default from 30 to 90 days in both loaders
+- Added `_setup_assortment_demo()` in competitor loader — creates 2 scrape runs, Marie Sharp's delist, Secret Aardvark new entry
+- Fixed promo flags: split into badge_promos (~60%) and price_drop_promos (~40%) — were all False before
+- Fixed OOS flags: increased OOS count formula
+- Fixed RadioItems int coercion bug (string "90" not in frozenset of ints)
+- Fixed `_setup_assortment_demo()` FK violation — must delete scrape_failures before scrape_runs
+- Cleared and reseeded Fly Postgres: 1,801 snapshots, 80 promos, 70 OOS events, 2 scrape runs
+
+Part 2 — Visual overhaul (Lailara Design System v2):
+- Browser tab title: "Competitive Shelf Intelligence | Lailara LLC"
+- 1200px max-width container + "LAILARA LLC" eyebrow
+- Custom tab nav (html.Button + dcc.Store) replacing dcc.Tabs, Chicago-20 underline
+- White card wrappers for all chart areas
+- Styled toggle buttons replacing RadioItems (dcc.Store pattern)
+- AG Grid replacing DataTable in promo summary + assortment monitor
+- ag-grid-overrides.css with Lailara tokens
+- Polished empty states (dashed border + em-dash icon)
+- OOS callout: white card with Red-42 left border
+- Transparent chart backgrounds (blend with white cards)
+
+Part 3 — Bug fixes found during verification:
+- Price Positioning empty chart: multi-product brands (Cinderhaven 5 SKUs) caused `sub.loc[brand, col]` to return Series; fixed with `groupby(["brand_name","retailer"]).mean()`
+- OOS Tracker always empty: query referenced nonexistent `v.oos_signal` column; silent except returned empty DataFrame
+- Assortment Monitor "Possible Delist" truncated: rebalanced AG Grid column flex values, added minWidth 140 to Status
+- Review Pulse layout overflow: rewrote to 2-column grid of brand cards with stacked compact charts (160px height, tight margins, horizontal legends)
+- Review Pulse y-axis: dynamic floor (half-star below lowest data) + 0.5-star gridlines
+
+**Tests:** 100/100 passing throughout.
+
+**Git state:** Clean on main. 20 commits pushed to origin. Deployed as version 11 on Fly.io.
+
+**DB state (Fly Postgres):**
+- 1,801 total snapshots (Mar 26 – Jun 23, 2026)
+- 7 brands (6 original + Secret Aardvark), 21 listings
+- 80 promo events (badge + price-drop), 70 OOS events
+- 2 scrape runs for Assortment Monitor demo
+
+**Dashboard live at:** https://competitive.lailarallc.com
+- All 5 tabs rendering with data
+- Price Positioning verified visually (7 brands, Cinderhaven outlined)
+- OOS, Assortment, Review Pulse verified via data queries (Chrome read-only prevented tab clicking)
+
+**Next:** Visually verify OOS Tracker, Assortment Monitor, and Review Pulse tabs in browser (couldn't click tabs due to Chrome read-only tier). All data queries confirmed working.
+
+---
+
 ## 2026-05-28 — All P1/P2/P3 fixes shipped; compound doc written; bar chart live
 
 **Started from:** Code review complete. Three P1 bugs, five P2, five P3 polish items queued.
