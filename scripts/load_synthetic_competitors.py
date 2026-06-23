@@ -255,6 +255,7 @@ def _setup_assortment_demo(conn) -> None:
     cur = conn.cursor()
 
     cur.execute("UPDATE price_snapshots SET scrape_run_id = NULL WHERE scrape_run_id IS NOT NULL")
+    cur.execute("DELETE FROM scrape_failures")
     cur.execute("DELETE FROM scrape_runs")
 
     cur.execute(
