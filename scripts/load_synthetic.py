@@ -184,7 +184,7 @@ def _insert_history(conn, listing_id: int, base_price_cents: int, days: int) -> 
         has_badge = day in badge_promos
         is_price_drop = day in price_drop_promos
         price = base_price_cents
-        sale_price = round(base_price_cents * 0.85) if is_promo else None
+        sale_price = round(base_price_cents * random.uniform(0.80, 0.92)) if is_promo else None
 
         cur.execute(
             """

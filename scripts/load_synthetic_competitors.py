@@ -216,7 +216,7 @@ def _insert_history(
         is_price_drop = day in price_drop_promos
         jitter = random.uniform(0.97, 1.03)
         price = round(base_price_cents * jitter)
-        sale_price = round(price * 0.85) if is_promo else None
+        sale_price = round(price * random.uniform(0.80, 0.92)) if is_promo else None
 
         cur.execute(
             """
