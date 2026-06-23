@@ -25,25 +25,32 @@ CALLOUT_ID = "oos-lost-revenue-callout"
 
 def layout() -> html.Div:
     return html.Div([
-        html.H2(
-            "OOS Tracker",
-            style={"fontFamily": FONT_SERIF,
-                   "fontWeight": "700", "fontSize": "22px", "marginBottom": "4px"},
-        ),
         last_scraped_indicator(),
+        html.P(
+            "Out-of-stock events across brands and retailers.",
+            style={"fontSize": "14px", "color": TEXT_SEC, "marginBottom": "0"},
+        ),
         html.Div([
-            html.Span("Date range: ", style={"fontSize": "13px", "color": TEXT_SEC}),
-            dcc.RadioItems(
-                id="oos-date-range",
-                options=DATE_RANGE_OPTIONS,
-                value=DATE_RANGE_DEFAULT,
-                inline=True,
-                style={"fontSize": "13px", "display": "inline-block", "marginLeft": "8px"},
-            ),
-        ], style={"marginBottom": "16px"}),
-        html.Div(id=CALLOUT_ID),
-        dcc.Graph(id=HEATMAP_ID, config={"displayModeBar": False}),
-    ], style={"padding": "24px"})
+            html.Div([
+                html.Span("Date range: ", style={"fontSize": "13px", "color": TEXT_SEC}),
+                dcc.RadioItems(
+                    id="oos-date-range",
+                    options=DATE_RANGE_OPTIONS,
+                    value=DATE_RANGE_DEFAULT,
+                    inline=True,
+                    style={"fontSize": "13px", "display": "inline-block", "marginLeft": "8px"},
+                ),
+            ], style={"marginBottom": "16px"}),
+            html.Div(id=CALLOUT_ID),
+            dcc.Graph(id=HEATMAP_ID, config={"displayModeBar": False}),
+        ], style={
+            "backgroundColor": "#ffffff",
+            "border": f"1px solid {GREY_LIGHT}",
+            "borderRadius": "2px",
+            "padding": "24px",
+            "marginTop": "20px",
+        }),
+    ], style={"paddingTop": "16px"})
 
 
 def register_callbacks(app) -> None:

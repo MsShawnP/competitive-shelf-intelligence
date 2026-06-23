@@ -15,18 +15,22 @@ TABLE_ID = "assortment-table"
 
 def layout() -> html.Div:
     return html.Div([
-        html.H2(
-            "Assortment Monitor",
-            style={"fontFamily": FONT_SERIF,
-                   "fontWeight": "700", "fontSize": "22px", "marginBottom": "4px"},
-        ),
         last_scraped_indicator(),
         html.P(
             "Products appearing or disappearing between the two most recent scrape runs.",
-            style={"fontSize": "14px", "color": TEXT_SEC, "marginBottom": "20px"},
+            style={"fontSize": "14px", "color": TEXT_SEC, "marginBottom": "0"},
         ),
-        html.Div(id=TABLE_ID),
-    ], style={"padding": "24px"})
+        html.Div(
+            html.Div(id=TABLE_ID),
+            style={
+                "backgroundColor": "#ffffff",
+                "border": f"1px solid {GREY_LIGHT}",
+                "borderRadius": "2px",
+                "padding": "24px",
+                "marginTop": "20px",
+            },
+        ),
+    ], style={"paddingTop": "16px"})
 
 
 def register_callbacks(app) -> None:

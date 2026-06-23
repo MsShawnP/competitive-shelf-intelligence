@@ -17,6 +17,7 @@ from app.constants import (
     COLOR_WALMART,
     FONT_SANS,
     FONT_SERIF,
+    GREY_LIGHT,
     INK,
     OWN_BRAND,
     TEXT_SEC,
@@ -29,19 +30,23 @@ GRAPH_ID = "price-positioning-chart"
 
 def layout() -> html.Div:
     return html.Div([
-        html.H2(
-            "Price Positioning",
-            style={"fontFamily": FONT_SERIF, "fontWeight": "700",
-                   "fontSize": "22px", "marginBottom": "4px"},
-        ),
         last_scraped_indicator(),
         html.P(
             "Price per ounce by brand and retailer, most expensive at top. "
             f"{OWN_BRAND} bars are outlined.",
-            style={"fontSize": "14px", "color": TEXT_SEC, "marginBottom": "20px"},
+            style={"fontSize": "14px", "color": TEXT_SEC, "marginBottom": "0"},
         ),
-        dcc.Graph(id=GRAPH_ID, config={"displayModeBar": False}),
-    ], style={"padding": "24px"})
+        html.Div(
+            dcc.Graph(id=GRAPH_ID, config={"displayModeBar": False}),
+            style={
+                "backgroundColor": "#ffffff",
+                "border": f"1px solid {GREY_LIGHT}",
+                "borderRadius": "2px",
+                "padding": "24px",
+                "marginTop": "20px",
+            },
+        ),
+    ], style={"paddingTop": "16px"})
 
 
 def register_callbacks(app) -> None:
