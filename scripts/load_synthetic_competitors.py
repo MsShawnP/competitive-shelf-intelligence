@@ -94,17 +94,19 @@ _COMPETITORS = [
         "upc": "",
         "skip_today": False,
     },
+    {
+        "brand": "Secret Aardvark",
+        "name": "Secret Aardvark Habanero Hot Sauce 8 oz",
+        "weight_oz": 8.0,
+        "walmart_id": "SECRET001",
+        "walmart_url": "https://www.walmart.com/ip/Secret-Aardvark-Habanero/SECRET001",
+        "amazon_id": "B00AIR2Y0G",
+        "amazon_url": "https://www.amazon.com/dp/B00AIR2Y0G",
+        "base_price_cents": 899,
+        "upc": "",
+        "skip_today": False,
+    },
 ]
-
-_NEW_ENTRY = {
-    "brand": "Secret Aardvark",
-    "name": "Secret Aardvark Habanero Hot Sauce 8 oz",
-    "weight_oz": 8.0,
-    "walmart_id": "SECRET001",
-    "walmart_url": "https://www.walmart.com/ip/Secret-Aardvark-Habanero/SECRET001",
-    "base_price_cents": 899,
-    "upc": "",
-}
 
 _DELIST_WALMART_ID = "10448878"  # Marie Sharp's Walmart listing
 
@@ -298,7 +300,7 @@ def _setup_assortment_demo(conn) -> None:
             (latest_run_id, today),
         )
 
-    ne = _NEW_ENTRY
+    ne = next(c for c in _COMPETITORS if c["brand"] == "Secret Aardvark")
     brand_id = _upsert_brand(conn, ne["brand"])
     product_id = _upsert_product(conn, brand_id, ne)
     listing_id = _upsert_listing(conn, product_id, "walmart", ne["walmart_id"], ne["walmart_url"])
