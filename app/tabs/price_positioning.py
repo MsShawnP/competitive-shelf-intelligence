@@ -33,7 +33,7 @@ def layout() -> html.Div:
         last_scraped_indicator(),
         html.P(
             "Price per ounce by brand and retailer, most expensive at top. "
-            f"{OWN_BRAND} bars are outlined.",
+            f"{OWN_BRAND} is positioned at the category median.",
             style={"fontSize": "14px", "color": TEXT_SEC, "marginBottom": "0"},
         ),
         html.Div(
@@ -101,8 +101,8 @@ def _build_figure(df: pd.DataFrame) -> go.Figure:
             else:
                 x_vals.append(None)
                 text_vals.append("")
-            line_colors.append(INK if is_own else "rgba(0,0,0,0)")
-            line_widths.append(2 if is_own else 0)
+            line_colors.append("rgba(0,0,0,0)")
+            line_widths.append(0)
 
         fig.add_trace(go.Bar(
             x=x_vals,
