@@ -102,8 +102,11 @@ def _rating_line(brand: str, df: pd.DataFrame) -> go.Figure:
             hovertemplate="%{x}: %{y:.2f} stars<extra></extra>",
         ))
     layout = base_chart_layout(height=220, y_title="Avg Stars", show_legend=True)
-    layout["yaxis"]["range"] = [1, 5]
+    y_min = max(1, df["avg_star_rating"].min() - 0.5)
+    y_max = 5
+    layout["yaxis"]["range"] = [y_min, y_max]
     layout["yaxis"]["autorange"] = False
+    layout["yaxis"]["dtick"] = 0.5
     layout["margin"] = dict(l=50, r=20, t=30, b=40)
     fig.update_layout(**layout)
     return fig
