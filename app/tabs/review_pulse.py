@@ -156,6 +156,8 @@ def _build_charts(df: pd.DataFrame) -> html.Div:
                         style={"display": "flex", "gap": "12px"},
                     ),
                 ],
+                id={"type": "review-comp-card", "index": OWN_BRAND},
+                n_clicks=0,
                 style={
                     "backgroundColor": "#ffffff",
                     "border": f"1px solid {GREY_LIGHT}",
@@ -164,6 +166,7 @@ def _build_charts(df: pd.DataFrame) -> html.Div:
                     "padding": "16px 20px 8px",
                     "marginBottom": "20px",
                     "overflow": "hidden",
+                    "cursor": "pointer",
                 },
             )
         )
