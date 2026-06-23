@@ -64,11 +64,11 @@ def _build_table(df: pd.DataFrame) -> dag.AgGrid:
         rowData=display.to_dict("records"),
         columnDefs=[
             {"field": "Brand", "flex": 2, "sortable": True},
-            {"field": "Product", "flex": 3, "sortable": True},
+            {"field": "Product", "flex": 2, "sortable": True},
             {"field": "Retailer", "flex": 1, "sortable": True},
-            {"field": "First Seen", "flex": 1, "sortable": True},
-            {"field": "Last Seen", "flex": 1, "sortable": True},
-            {"field": "Status", "flex": 1, "sortable": True,
+            {"field": "First Seen", "flex": 0.8, "sortable": True},
+            {"field": "Last Seen", "flex": 0.8, "sortable": True},
+            {"field": "Status", "flex": 1.5, "minWidth": 140, "sortable": True,
              "cellStyle": {"styleConditions": [
                  {"condition": "params.value === 'New Entry'",
                   "style": {"backgroundColor": "#e4f5f0", "color": TEAL, "fontWeight": "600"}},
