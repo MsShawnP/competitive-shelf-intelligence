@@ -107,16 +107,19 @@ def _rating_line(brand: str, df: pd.DataFrame) -> go.Figure:
             mode="lines+markers",
             name=retailer.title(),
             line=dict(color=CHART_PALETTE[i % len(CHART_PALETTE)], width=2),
-            marker=dict(size=6),
+            marker=dict(size=3),
             hovertemplate="%{x}: %{y:.2f} stars<extra></extra>",
         ))
-    layout = base_chart_layout(height=220, y_title="Avg Stars", show_legend=True)
     y_min = max(1, df["avg_star_rating"].min() - 0.5)
-    y_max = 5
-    layout["yaxis"]["range"] = [y_min, y_max]
+    layout = base_chart_layout(height=160, y_title="Avg Stars", show_legend=True)
+    layout["yaxis"]["range"] = [y_min, 5]
     layout["yaxis"]["autorange"] = False
     layout["yaxis"]["dtick"] = 0.5
-    layout["margin"] = dict(l=50, r=20, t=30, b=40)
+    layout["margin"] = dict(l=36, r=8, t=28, b=28)
+    layout["legend"] = dict(
+        orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
+        font=dict(size=10, family=FONT_SANS),
+    )
     fig.update_layout(**layout)
     return fig
 
