@@ -204,6 +204,18 @@ Part 3 — Bug fixes found during verification:
 
 ---
 
+## 2026-06-23 — Fix Secret Aardvark single-data-point charts
+
+**Started from:** Secret Aardvark had only 1 day of history (Assortment Monitor demo only), causing garbage Plotly axis labels.
+
+**Did:** Moved Secret Aardvark from standalone `_NEW_ENTRY` dict into `_COMPETITORS` list for full 90-day × 2-retailer history. Updated `_setup_assortment_demo()` reference. Deployed, cleared, reseeded (1980 snapshots). Category median shifted $1.31 → $1.21 with Secret Aardvark in the pool.
+
+**State:** All 7 brands have full 90-day history. 1980 snapshots. All tabs rendering. 100/100 tests. Deployed and pushed.
+
+**Next:** Visually verify all tabs — Secret Aardvark charts in Review Pulse (normal date axes), Assortment Monitor still showing "New Entry." Improvement review due 2026-06-28.
+
+---
+
 ## 2026-05-28 — All P1/P2/P3 fixes shipped; compound doc written; bar chart live
 
 **Started from:** Code review complete. Three P1 bugs, five P2, five P3 polish items queued.
