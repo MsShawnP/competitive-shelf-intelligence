@@ -136,12 +136,12 @@ def _build_charts(df: pd.DataFrame) -> html.Div:
                     }),
                     dcc.Graph(
                         figure=_compact_rating(brand_df),
-                        config={"displayModeBar": False},
+                        config={"displayModeBar": "hover", "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
                         style={"marginBottom": "0"},
                     ),
                     dcc.Graph(
                         figure=_compact_reviews(brand_df),
-                        config={"displayModeBar": False},
+                        config={"displayModeBar": "hover", "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
                     ),
                 ],
                 style={
@@ -160,7 +160,7 @@ def _build_charts(df: pd.DataFrame) -> html.Div:
                 comp_cards,
                 style={
                     "display": "grid",
-                    "gridTemplateColumns": "1fr 1fr 1fr",
+                    "gridTemplateColumns": "1fr 1fr",
                     "gap": "12px",
                 },
             )
@@ -225,7 +225,7 @@ def _compact_rating(df: pd.DataFrame) -> go.Figure:
             hovertemplate="%{x}: %{y:.2f}<extra></extra>",
         ))
     y_min = max(1, df["avg_star_rating"].min() - 0.5)
-    layout = base_chart_layout(height=120, y_title="Stars", show_legend=False)
+    layout = base_chart_layout(height=160, y_title="Stars", show_legend=False)
     layout["yaxis"]["range"] = [y_min, 5]
     layout["yaxis"]["autorange"] = False
     layout["yaxis"]["dtick"] = 0.5
@@ -247,7 +247,7 @@ def _compact_reviews(df: pd.DataFrame) -> go.Figure:
             marker_color=CHART_PALETTE[i % len(CHART_PALETTE)],
             hovertemplate="%{x}: %{y:,}<extra></extra>",
         ))
-    layout = base_chart_layout(height=120, y_title="Reviews", show_legend=False)
+    layout = base_chart_layout(height=160, y_title="Reviews", show_legend=False)
     layout["margin"] = dict(l=36, r=4, t=4, b=24)
     layout["yaxis"]["title_font"] = dict(size=10)
     layout["yaxis"]["tickfont"] = dict(size=9)
