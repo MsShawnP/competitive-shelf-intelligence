@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import pandas as pd
-from dash import Input, Output, dash_table, html
+import dash_ag_grid as dag
+from dash import Input, Output, html
 
 from app.components import empty_state, last_scraped_indicator
-from app.constants import CANVAS, FONT_SANS, FONT_SERIF, GREY_LIGHT, RED, TEXT_SEC, TEAL
+from app.constants import FONT_SANS, FONT_SERIF, GREY_LIGHT, RED, TEXT_SEC, TEAL
 from app.data import get_assortment_changes
 
 TAB_ID = "tab-assortment-monitor"
@@ -45,7 +46,7 @@ def register_callbacks(app) -> None:
         return _build_table(df)
 
 
-def _build_table(df: pd.DataFrame) -> dash_table.DataTable:
+def _build_table(df: pd.DataFrame) -> dag.AgGrid:
     display = df.rename(columns={
         "brand_name": "Brand",
         "product_name": "Product",
@@ -59,30 +60,24 @@ def _build_table(df: pd.DataFrame) -> dash_table.DataTable:
         if col in display.columns:
             display[col] = pd.to_datetime(display[col]).dt.strftime("%Y-%m-%d")
 
-    return dash_table.DataTable(
-        data=display.to_dict("records"),
-        columns=[{"name": c, "id": c} for c in display.columns],
-        style_table={"overflowX": "auto"},
-        style_cell={"fontFamily": FONT_SANS, "fontSize": "13px", "padding": "8px 12px"},
-        style_header={
-            "fontWeight": "600",
-            "backgroundColor": CANVAS,
-            "borderBottom": f"2px solid {GREY_LIGHT}",
-        },
-        style_data_conditional=[
-            {
-                "if": {"filter_query": '{Status} = "New Entry"'},
-                "backgroundColor": "#e4f5f0",
-                "color": TEAL,
-                "fontWeight": "600",
-            },
-            {
-                "if": {"filter_query": '{Status} = "Possible Delist"'},
-                "backgroundColor": "#fce8e7",
-                "color": RED,
-                "fontWeight": "600",
-            },
+    return dag.AgGrid(
+        rowData=display.to_dict("records"),
+        columnDefs=[
+            {"field": "Brand", "flex": 2, "sortable": True},
+            {"field": "Product", "flex": 3, "sortable": True},
+            {"field": "Retailer", "flex": 1, "sortable": True},
+            {"field": "First Seen", "flex": 1, "sortable": True},
+            {"field": "Last Seen", "flex": 1, "sortable": True},
+            {"field": "Status", "flex": 1, "sortable": True,
+             "cellStyle": {"styleConditions": [
+                 {"condition": "params.value === 'New Entry'",
+                  "style": {"backgroundColor": "#e4f5f0", "color": TEAL, "fontWeight": "600"}},
+                 {"condition": "params.value === 'Possible Delist'",
+                  "style": {"backgroundColor": "#fce8e7", "color": RED, "fontWeight": "600"}},
+             ]}},
         ],
-        sort_action="native",
-        filter_action="native",
+        defaultColDef={"resizable": False},
+        dashGridOptions={"domLayout": "autoHeight", "rowHeight": 36, "headerHeight": 36},
+        style={"width": "100%"},
+        className="ag-theme-alpine",
     )

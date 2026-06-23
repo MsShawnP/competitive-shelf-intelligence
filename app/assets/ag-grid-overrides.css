@@ -1,0 +1,23 @@
+/* AG Grid overrides — Lailara Design System v2 */
+
+.ag-theme-alpine {
+  --ag-font-family: 'Source Sans 3', 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --ag-font-size: 13px;
+  --ag-header-font-weight: 600;
+  --ag-header-background-color: #f5f3ee;
+  --ag-border-color: #d9d9d9;
+  --ag-row-border-color: #d9d9d9;
+  --ag-odd-row-background-color: #faf9f6;
+  --ag-cell-horizontal-padding: 8px;
+  --ag-header-column-separator-display: none;
+  --ag-borders: none;
+  --ag-row-hover-color: #f0ede6;
+}
+
+.ag-theme-alpine .ag-header-cell {
+  border-bottom: 2px solid #d9d9d9;
+}
+
+.ag-theme-alpine .ag-root-wrapper {
+  border: none;
+}

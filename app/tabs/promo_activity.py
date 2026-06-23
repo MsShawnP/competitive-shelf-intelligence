@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pandas as pd
 import plotly.graph_objects as go
-from dash import Input, Output, dash_table, dcc, html
+import dash_ag_grid as dag
+from dash import Input, Output, dcc, html
 
 from app.charts import base_chart_layout
 from app.components import date_range_toggles, empty_state, last_scraped_indicator, register_date_range_callbacks
@@ -98,21 +99,25 @@ def _build_heatmap(df: pd.DataFrame) -> go.Figure:
     return fig
 
 
-def _build_summary(df: pd.DataFrame) -> dash_table.DataTable:
+def _build_summary(df: pd.DataFrame) -> dag.AgGrid:
     display_df = df.copy()
     display_df.columns = ["Brand", "Retailer", "Promo Events", "Avg Depth (%)"]
     display_df["Retailer"] = display_df["Retailer"].str.title()
     display_df["Avg Depth (%)"] = display_df["Avg Depth (%)"].apply(
         lambda v: f"{v:.1f}%" if pd.notna(v) else "—"
     )
-    return dash_table.DataTable(
-        data=display_df.to_dict("records"),
-        columns=[{"name": c, "id": c} for c in display_df.columns],
-        style_table={"overflowX": "auto"},
-        style_cell={"fontFamily": FONT_SANS, "fontSize": "13px", "padding": "8px 12px"},
-        style_header={"fontWeight": "600", "backgroundColor": CANVAS, "borderBottom": f"2px solid {GREY_LIGHT}"},
-        style_data_conditional=[{"if": {"row_index": "odd"}, "backgroundColor": "#faf9f6"}],
-        sort_action="native",
+    return dag.AgGrid(
+        rowData=display_df.to_dict("records"),
+        columnDefs=[
+            {"field": "Brand", "flex": 2, "sortable": True},
+            {"field": "Retailer", "flex": 1, "sortable": True},
+            {"field": "Promo Events", "flex": 1, "sortable": True},
+            {"field": "Avg Depth (%)", "flex": 1, "sortable": True},
+        ],
+        defaultColDef={"resizable": False},
+        dashGridOptions={"domLayout": "autoHeight", "rowHeight": 36, "headerHeight": 36},
+        style={"width": "100%"},
+        className="ag-theme-alpine",
     )
 
 
