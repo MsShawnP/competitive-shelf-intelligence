@@ -27,6 +27,8 @@ app = Dash(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     suppress_callback_exceptions=True,
+    title="Competitive Shelf Intelligence | Lailara LLC",
+    update_title=None,
 )
 server = app.server
 server.secret_key = os.environ.get("FLASK_SECRET_KEY") or _secrets.token_hex(32)
