@@ -44,7 +44,7 @@ _COMPETITORS = [
         "base_price_cents": 749,   # $7.49
         "upc": "856262005167",
         # price already in db from real scrape — skip re-insert for today
-        "skip_today": True,
+        "skip_today": False,
     },
     {
         "brand": "Truff",
@@ -96,6 +96,18 @@ _COMPETITORS = [
     },
 ]
 
+_NEW_ENTRY = {
+    "brand": "Secret Aardvark",
+    "name": "Secret Aardvark Habanero Hot Sauce 8 oz",
+    "weight_oz": 8.0,
+    "walmart_id": "SECRET001",
+    "walmart_url": "https://www.walmart.com/ip/Secret-Aardvark-Habanero/SECRET001",
+    "base_price_cents": 899,
+    "upc": "",
+}
+
+_DELIST_WALMART_ID = "10448878"  # Marie Sharp's Walmart listing
+
 
 @click.command()
 @click.option("--dry-run", is_flag=True, default=False)
@@ -133,6 +145,8 @@ def main(dry_run: bool, days: int) -> None:
                     "%-20s %-8s  $%.2f  %d days",
                     comp["brand"], retailer, comp["base_price_cents"] / 100, days,
                 )
+
+        _setup_assortment_demo(conn)
 
     click.echo(f"Done. {total_snapshots} snapshots written.")
 
@@ -228,6 +242,83 @@ def _insert_history(
         if cur.rowcount:
             inserted += 1
     return inserted
+
+
+def _setup_assortment_demo(conn) -> None:
+    """Create 2 scrape_runs so Assortment Monitor has data to compare."""
+    today = date.today()
+    prior_date = today - timedelta(days=7)
+    cur = conn.cursor()
+
+    cur.execute("UPDATE price_snapshots SET scrape_run_id = NULL WHERE scrape_run_id IS NOT NULL")
+    cur.execute("DELETE FROM scrape_runs")
+
+    cur.execute(
+        "INSERT INTO scrape_runs (retailer, started_at, completed_at, status, product_count) "
+        "VALUES ('all', %s, %s, 'complete', 20) RETURNING id",
+        (datetime.combine(prior_date, datetime.min.time()),
+         datetime.combine(prior_date, datetime.min.time())),
+    )
+    prior_run_id = cur.fetchone()[0]
+
+    cur.execute(
+        "INSERT INTO scrape_runs (retailer, started_at, completed_at, status, product_count) "
+        "VALUES ('all', %s, %s, 'complete', 20) RETURNING id",
+        (datetime.combine(today, datetime.min.time()),
+         datetime.combine(today, datetime.min.time())),
+    )
+    latest_run_id = cur.fetchone()[0]
+
+    cur.execute(
+        "SELECT id FROM retailer_listings WHERE retailer = 'walmart' AND retailer_id = %s",
+        (_DELIST_WALMART_ID,),
+    )
+    row = cur.fetchone()
+    delist_listing_id = row[0] if row else None
+
+    cur.execute(
+        "UPDATE price_snapshots SET scrape_run_id = %s WHERE scraped_date = %s",
+        (prior_run_id, prior_date),
+    )
+
+    if delist_listing_id:
+        cur.execute(
+            "UPDATE price_snapshots SET scrape_run_id = %s "
+            "WHERE scraped_date = %s AND listing_id != %s",
+            (latest_run_id, today, delist_listing_id),
+        )
+    else:
+        cur.execute(
+            "UPDATE price_snapshots SET scrape_run_id = %s WHERE scraped_date = %s",
+            (latest_run_id, today),
+        )
+
+    ne = _NEW_ENTRY
+    brand_id = _upsert_brand(conn, ne["brand"])
+    product_id = _upsert_product(conn, brand_id, ne)
+    listing_id = _upsert_listing(conn, product_id, "walmart", ne["walmart_id"], ne["walmart_url"])
+    cur.execute(
+        """
+        INSERT INTO price_snapshots (
+            listing_id, scrape_run_id, scraped_at, scraped_date,
+            price_cents, sale_price_cents,
+            has_promo_badge, price_drop_promo,
+            is_oos, oos_signal, star_rating, review_count
+        ) VALUES (
+            %s, %s, %s AT TIME ZONE 'UTC', %s,
+            %s, NULL, FALSE, FALSE, FALSE, NULL, 4.5, 120
+        )
+        ON CONFLICT (listing_id, scraped_date) DO UPDATE
+            SET scrape_run_id = EXCLUDED.scrape_run_id
+        """,
+        (listing_id, latest_run_id,
+         datetime.combine(today, datetime.min.time()), today,
+         ne["base_price_cents"]),
+    )
+    logger.info("Assortment demo: prior_run=%d, latest_run=%d", prior_run_id, latest_run_id)
+    if delist_listing_id:
+        logger.info("Possible delist: listing_id=%d (Marie Sharp's Walmart)", delist_listing_id)
+    logger.info("New entry: %s", ne["name"])
 
 
 if __name__ == "__main__":
