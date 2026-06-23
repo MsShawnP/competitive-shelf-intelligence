@@ -54,6 +54,7 @@ def register_callbacks(app) -> None:
         Input("_refresh-trigger", "data"),
     )
     def update(days, _):
+        days = int(days) if days is not None else DATE_RANGE_DEFAULT
         days = days if days in _ALLOWED_DAYS else DATE_RANGE_DEFAULT
         df = get_oos_events(days)
         heatmap = _build_heatmap(df) if not df.empty else _empty_fig("No OOS events in this window.")

@@ -57,6 +57,7 @@ def register_callbacks(app) -> None:
         Input("_refresh-trigger", "data"),
     )
     def update(days, _):
+        days = int(days) if days is not None else DATE_RANGE_DEFAULT
         days = days if days in _ALLOWED_DAYS else DATE_RANGE_DEFAULT
         df = get_promo_events(days)
         summary_df = get_promo_summary(days)
