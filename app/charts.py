@@ -29,8 +29,8 @@ def base_chart_layout(
 ) -> dict:
     return dict(
         template="simple_white",
-        paper_bgcolor=CANVAS,
-        plot_bgcolor=CANVAS,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
         height=height,
         margin=dict(l=left_margin, r=90, t=40, b=50),
         yaxis=dict(
