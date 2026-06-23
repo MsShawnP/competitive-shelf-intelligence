@@ -185,6 +185,25 @@ Part 3 — Bug fixes found during verification:
 
 ---
 
+## 2026-06-23 — Review Pulse redesign + final polish pass
+
+**Started from:** Dashboard live at competitive.lailarallc.com. Review Pulse tab had equal-treatment 2-column grid.
+
+**Did:**
+- Rewrote Review Pulse: hero card for Cinderhaven (navy left border, "YOUR BRAND" label, two 240px charts) + 2-column competitive grid (160px compact charts, no legends)
+- Built click-to-expand modal: clicking any brand card (hero or competitor) opens XL modal with 320px + 280px charts
+- Removed black outline from Cinderhaven bars in Price Positioning
+- Randomized promo depth from fixed 15% to 8-20% in both loaders
+- Added hover modebar on compact charts
+- Reseeded Fly Postgres (cleared + reloaded 1801 snapshots with randomized depths)
+- Deployed 4 times
+
+**State:** All 5 tabs rendering. 100/100 tests. 1801 snapshots in Fly Postgres. Git clean on main.
+
+**Next:** Visually verify all tabs in browser — click Review Pulse cards to confirm modal, check Promo Activity for varied depth percentages, confirm Price Positioning outlines removed. Improvement review due 2026-06-28.
+
+---
+
 ## 2026-05-28 — All P1/P2/P3 fixes shipped; compound doc written; bar chart live
 
 **Started from:** Code review complete. Three P1 bugs, five P2, five P3 polish items queued.

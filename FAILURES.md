@@ -172,3 +172,31 @@ IPs, transparent to our HTML parsing code.
 **Status:** Resolved. On Windows, use `python` (not `python3`) and prefix with `PYTHONUTF8=1` when running ce-compound session scripts.
 
 **Tags:** windows, encoding, cp1252, utf8, ce-sessions, ce-compound, python3
+
+---
+
+### 2026-06-23 — Reseed wrote 0 rows due to ON CONFLICT DO NOTHING on existing data
+
+**Attempted:** Ran both loaders on Fly after changing promo depth from fixed 0.85 to random.uniform(0.80, 0.92). Expected new randomized values.
+
+**Why it didn't work:** Existing snapshots (from previous seed) matched on `(listing_id, scraped_date)` UNIQUE constraint. ON CONFLICT DO NOTHING silently skipped all 1801 rows. The old fixed-15% data persisted unchanged.
+
+**What we tried instead:** DELETE FROM price_snapshots first, then re-run loaders (competitors before Cinderhaven — Cinderhaven loader needs competitor data for median calculation).
+
+**Status:** Resolved. When changing snapshot generation logic, clear old data before reseeding.
+
+**Tags:** reseed, on-conflict, synthetic-data, promo-depth
+
+---
+
+### 2026-06-23 — Deploy must precede reseed when loader logic changes
+
+**Attempted:** Reseeded Fly Postgres before deploying the new randomized promo depth code.
+
+**Why it didn't work:** The running Fly machine still had the old code with `round(price * 0.85)`. SSH runs scripts from the deployed `/app` directory, not local. First reseed used old fixed-15% logic.
+
+**What we tried instead:** Deploy first, then reseed. The deployed code at `/app` now has `random.uniform(0.80, 0.92)`.
+
+**Status:** Resolved. Always deploy code changes before reseeding via SSH.
+
+**Tags:** fly-io, deploy-order, reseed, ssh

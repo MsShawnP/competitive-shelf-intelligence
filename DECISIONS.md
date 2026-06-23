@@ -113,6 +113,11 @@ Each entry:
 - **Why:** Rate limiting in `base.py` uses `self._last_request_time` (instance-level). Two concurrent scraper processes would each enforce their own minimum delay, doubling the effective request rate. Acceptable for v1 because there are no scheduled runs yet and manual runs are never concurrent. Revisit when cron scheduling is added.
 - **Scope:** `src/scrapers/base.py`. Fix: use a shared file lock or named semaphore when scheduling is implemented.
 
+### 2026-06-23 — Review Pulse uses hero/competitive grid pattern with shared modal callback
+- **Why:** Cinderhaven (own brand) needs visual prominence; competitors need glanceable density. Hero card gets full width, 240px charts with legends. Competitors get 2-column grid with 160px compact charts. All cards share one pattern-matching callback (`{"type": "review-comp-card", "index": ALL}`) for the click-to-expand modal — no duplicate callback logic.
+- **Scope:** `app/tabs/review_pulse.py`
+- **Do not:** Add separate modal callbacks per card type. The shared pattern-matching approach scales to any number of brands.
+
 ### 2026-05-28 — Accept SSRF risk in config URL handling for v1 (internal tool)
 - **Why:** URLs from `config/products.yaml` are passed to ScraperAPI and Playwright with no domain allowlist. Risk is low because `products.yaml` is a committed, reviewed file in a private repo with no external write access. A URL allowlist (restrict to `walmart.com`, `amazon.com`) is the right fix but deferred to P2+ given the internal-tool context.
 - **Scope:** `scrape.py`, `src/scrapers/walmart.py`, `src/scrapers/base.py`.
