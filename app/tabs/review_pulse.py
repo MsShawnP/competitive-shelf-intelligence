@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pandas as pd
 import plotly.graph_objects as go
-from dash import Input, Output, dcc, html
+import dash_bootstrap_components as dbc
+from dash import ALL, Input, Output, State, callback_context, dcc, html, no_update
 
 from app.charts import base_chart_layout
 from app.components import date_range_toggles, empty_state, last_scraped_indicator, register_date_range_callbacks
@@ -37,6 +38,19 @@ def layout() -> html.Div:
             "padding": "24px",
             "marginTop": "20px",
         }),
+        dcc.Store(id="review-modal-brand", data=None),
+        dbc.Modal(
+            [
+                dbc.ModalHeader(
+                    dbc.ModalTitle(id="review-modal-title"),
+                    close_button=True,
+                ),
+                dbc.ModalBody(id="review-modal-body"),
+            ],
+            id="review-modal",
+            size="xl",
+            is_open=False,
+        ),
     ], style={"paddingTop": "16px"})
 
 
@@ -55,6 +69,48 @@ def register_callbacks(app) -> None:
         if df.empty:
             return empty_state("No review data yet.")
         return _build_charts(df)
+
+    @app.callback(
+        Output("review-modal", "is_open"),
+        Output("review-modal-title", "children"),
+        Output("review-modal-body", "children"),
+        Input({"type": "review-comp-card", "index": ALL}, "n_clicks"),
+        State("review-date-range", "data"),
+        prevent_initial_call=True,
+    )
+    def open_modal(n_clicks_list, days):
+        ctx = callback_context
+        if not ctx.triggered:
+            return no_update, no_update, no_update
+
+        triggered = ctx.triggered[0]
+        if triggered["value"] is None or triggered["value"] == 0:
+            return no_update, no_update, no_update
+
+        import json
+        prop_id = triggered["prop_id"]
+        id_dict = json.loads(prop_id.split(".")[0])
+        brand = id_dict["index"]
+
+        try:
+            days = int(days)
+        except (TypeError, ValueError):
+            days = DATE_RANGE_DEFAULT
+        if days not in _ALLOWED_DAYS:
+            days = DATE_RANGE_DEFAULT
+
+        df = get_review_trends(days)
+        brand_df = df[df["brand_name"] == brand]
+
+        if brand_df.empty:
+            return True, brand, html.P("No data available.", style={"color": TEXT_SEC})
+
+        body = html.Div([
+            dcc.Graph(figure=_modal_rating(brand_df), config={"displayModeBar": False}),
+            dcc.Graph(figure=_modal_reviews(brand_df), config={"displayModeBar": False}),
+        ])
+
+        return True, brand, body
 
 
 def _build_charts(df: pd.DataFrame) -> html.Div:
@@ -144,12 +200,15 @@ def _build_charts(df: pd.DataFrame) -> html.Div:
                         config={"displayModeBar": "hover", "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
                     ),
                 ],
+                id={"type": "review-comp-card", "index": brand},
+                n_clicks=0,
                 style={
                     "backgroundColor": "#faf9f6",
                     "border": "1px solid #e8e6e1",
                     "borderRadius": "2px",
                     "padding": "10px 10px 2px",
                     "overflow": "hidden",
+                    "cursor": "pointer",
                 },
             )
         )
@@ -252,5 +311,50 @@ def _compact_reviews(df: pd.DataFrame) -> go.Figure:
     layout["yaxis"]["title_font"] = dict(size=10)
     layout["yaxis"]["tickfont"] = dict(size=9)
     layout["xaxis"]["tickfont"] = dict(size=9)
+    fig.update_layout(**layout)
+    return fig
+
+
+def _modal_rating(df: pd.DataFrame) -> go.Figure:
+    fig = go.Figure()
+    for i, (retailer, sub) in enumerate(df.groupby("retailer")):
+        sub = sub.sort_values("scraped_date")
+        fig.add_trace(go.Scatter(
+            x=sub["scraped_date"], y=sub["avg_star_rating"],
+            mode="lines+markers", name=retailer.title(),
+            line=dict(color=CHART_PALETTE[i % len(CHART_PALETTE)], width=2),
+            marker=dict(size=5),
+            hovertemplate="%{x}: %{y:.2f} stars<extra></extra>",
+        ))
+    y_min = max(1, df["avg_star_rating"].min() - 0.5)
+    layout = base_chart_layout(height=320, y_title="Avg Star Rating", show_legend=True)
+    layout["yaxis"]["range"] = [y_min, 5]
+    layout["yaxis"]["autorange"] = False
+    layout["yaxis"]["dtick"] = 0.5
+    layout["margin"] = dict(l=50, r=20, t=32, b=40)
+    layout["legend"] = dict(
+        orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
+        font=dict(size=12, family=FONT_SANS),
+    )
+    fig.update_layout(**layout)
+    return fig
+
+
+def _modal_reviews(df: pd.DataFrame) -> go.Figure:
+    fig = go.Figure()
+    for i, (retailer, sub) in enumerate(df.groupby("retailer")):
+        sub = sub.sort_values("scraped_date")
+        fig.add_trace(go.Bar(
+            x=sub["scraped_date"], y=sub["max_review_count"],
+            name=retailer.title(),
+            marker_color=CHART_PALETTE[i % len(CHART_PALETTE)],
+            hovertemplate="%{x}: %{y:,} reviews<extra></extra>",
+        ))
+    layout = base_chart_layout(height=280, y_title="Review Count", show_legend=True)
+    layout["margin"] = dict(l=50, r=20, t=32, b=40)
+    layout["legend"] = dict(
+        orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
+        font=dict(size=12, family=FONT_SANS),
+    )
     fig.update_layout(**layout)
     return fig
