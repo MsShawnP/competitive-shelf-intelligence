@@ -46,7 +46,7 @@ _SYNTHETIC_BRAND = "Cinderhaven"
 
 @click.command()
 @click.option("--dry-run", is_flag=True, default=False, help="Preview without writing to DB.")
-@click.option("--days", default=30, show_default=True, help="Number of history days to generate.")
+@click.option("--days", default=90, show_default=True, help="Number of history days to generate.")
 def main(dry_run: bool, days: int) -> None:
     """Seed Cinderhaven synthetic data at the real category price median."""
     with get_conn() as conn:

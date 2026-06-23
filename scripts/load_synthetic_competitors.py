@@ -99,7 +99,7 @@ _COMPETITORS = [
 
 @click.command()
 @click.option("--dry-run", is_flag=True, default=False)
-@click.option("--days", default=30, show_default=True)
+@click.option("--days", default=90, show_default=True)
 def main(dry_run: bool, days: int) -> None:
     """Seed synthetic competitor price history."""
     if dry_run:
