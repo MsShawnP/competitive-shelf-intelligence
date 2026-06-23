@@ -193,8 +193,8 @@ def _insert_history(
     today = date.today()
     random.seed(listing_id + days)
 
-    oos_count = max(1, round(days * 3 / 90))
-    promo_count = max(1, round(days * 2 / 90))
+    oos_count = max(2, round(days * 3 / 90))
+    promo_count = max(2, round(days * 4 / 90))
 
     all_days = [today - timedelta(days=i) for i in range(days)]
     if skip_today:
@@ -203,13 +203,17 @@ def _insert_history(
     oos_days = set(random.sample(all_days, min(oos_count, len(all_days))))
     non_oos = [d for d in all_days if d not in oos_days]
     promo_days = set(random.sample(non_oos, min(promo_count, len(non_oos))))
+    promo_list = sorted(promo_days)
+    badge_promos = set(promo_list[: len(promo_list) * 3 // 5])
+    price_drop_promos = promo_days - badge_promos
 
     cur = conn.cursor()
     inserted = 0
     for day in reversed(all_days):
         is_oos = day in oos_days
         is_promo = day in promo_days
-        # Small random walk ±3% so trend lines have texture
+        has_badge = day in badge_promos
+        is_price_drop = day in price_drop_promos
         jitter = random.uniform(0.97, 1.03)
         price = round(base_price_cents * jitter)
         sale_price = round(price * 0.85) if is_promo else None
@@ -233,7 +237,7 @@ def _insert_history(
                 datetime.combine(day, datetime.min.time()),
                 day,
                 price, sale_price,
-                is_promo, False,
+                has_badge, is_price_drop,
                 is_oos, "oos_text" if is_oos else None,
                 round(random.uniform(4.0, 4.9), 1),
                 random.randint(30, 2000),

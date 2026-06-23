@@ -164,9 +164,8 @@ def _insert_history(conn, listing_id: int, base_price_cents: int, days: int) -> 
     today = date.today()
     random.seed(listing_id)  # deterministic so reruns produce same history
 
-    # Determine OOS days and promo days proportional to history window
-    oos_count = max(1, round(days * 4 / 90))
-    promo_count = max(0, round(days * 1.5 / 90))
+    oos_count = max(2, round(days * 4 / 90))
+    promo_count = max(2, round(days * 4 / 90))
 
     all_days = [today - timedelta(days=i) for i in range(days)]
     oos_days = set(random.sample(all_days, min(oos_count, len(all_days))))
@@ -174,13 +173,18 @@ def _insert_history(conn, listing_id: int, base_price_cents: int, days: int) -> 
         [d for d in all_days if d not in oos_days],
         min(promo_count, len(all_days) - len(oos_days)),
     ))
+    promo_list = sorted(promo_days)
+    badge_promos = set(promo_list[: len(promo_list) * 3 // 5])
+    price_drop_promos = promo_days - badge_promos
 
     cur = conn.cursor()
     for day in reversed(all_days):  # oldest first
         is_oos = day in oos_days
         is_promo = day in promo_days
-        price = base_price_cents if not is_promo else round(base_price_cents * 0.85)
-        sale_price = price if is_promo else None
+        has_badge = day in badge_promos
+        is_price_drop = day in price_drop_promos
+        price = base_price_cents
+        sale_price = round(base_price_cents * 0.85) if is_promo else None
 
         cur.execute(
             """
@@ -206,7 +210,7 @@ def _insert_history(conn, listing_id: int, base_price_cents: int, days: int) -> 
                 datetime.combine(day, datetime.min.time()),
                 day,
                 price, sale_price,
-                is_promo, False,
+                has_badge, is_price_drop,
                 is_oos, "oos_text" if is_oos else None,
                 round(random.uniform(4.1, 4.8), 1),
                 random.randint(50, 500),
