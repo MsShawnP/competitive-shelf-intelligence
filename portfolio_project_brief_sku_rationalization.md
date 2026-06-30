@@ -91,18 +91,18 @@ Optional 6th dimension: **Strategic value** — brand builder, line filler, entr
 | **Fix or kill** | Fails one dimension badly, fixable root cause identified | Specific fix with timeline; if not fixed in 90 days, delist |
 | **Kill** | Fails two or more dimensions, no fix available | Delist. Quantify savings. Reallocate resources to "double down" SKUs. |
 
-**Part 2 — The proof: Cinderhaven's 90-SKU portfolio analysis**
+**Part 2 — The proof: Cinderhaven's 50-SKU portfolio analysis**
 
-Cinderhaven has 90 SKUs across three product lines (Artisan Sauces, Specialty Condiments, Pantry Staples). The framework scores all 90:
+Cinderhaven has 50 SKUs across five product lines (Artisan Sauces, Pantry Staples, Specialty Condiments, Dried Goods, Snack Bites). The framework scores all 50 into four quadrants:
 
-| Recommendation | SKU Count | % of Portfolio | % of Revenue | Annual Loaded Cost |
-|---------------|:---------:|:--------------:|:------------:|:------------------:|
-| Double down | 12 | 13% | 38% | $420K |
-| Maintain | 48 | 53% | 45% | $1.1M |
-| Fix or kill | 15 | 17% | 12% | $380K |
-| Kill | 15 | 17% | 5% | $290K |
+| Recommendation | SKU Count | % of Portfolio |
+|---------------|:---------:|:--------------:|
+| Double down | 1 | 2% |
+| Maintain | 16 | 32% |
+| Fix or kill | 14 | 28% |
+| Kill | 19 | 38% |
 
-The headline finding: **Cinderhaven's bottom 15 SKUs generate $180K in annual revenue but cost $290K to maintain. They are net-negative by $110K/year.** Killing them saves $110K in direct costs AND frees shelf space for 3–5 new SKUs that could generate $300K–$500K in revenue.
+The headline finding: **19 of Cinderhaven's 50 SKUs (38%) score in the "kill" quadrant — net-negative on loaded margin once shelf-space, production complexity, and cannibalization costs are attributed.** Delisting them frees shelf space, production capacity, and management attention for higher-performing items or new launches. (Per-SKU revenue and loaded-cost detail comes from the live scoring tool; figures here are the current pipeline output, not estimates.)
 
 The "fix or kill" 15 are even more interesting. Each one has a specific issue:
 - 4 SKUs with velocity below retailer threshold at one retailer but above at another (fix: delist at the underperforming retailer, maintain at the strong one)
@@ -113,8 +113,8 @@ The "fix or kill" 15 are even more interesting. Each one has a specific issue:
 **Part 3 — The evidence: the technical artifacts**
 
 - **Streamlit interactive tool** — user uploads SKU data (velocity, COGS, retailer costs) or connects to sample Cinderhaven data. Tool produces the five-dimensional scoring matrix, quadrant assignment per SKU, and a "kill list" with quantified annual savings.
-- **Excel financial model** — CFO-grade. Scenario analysis: "What happens to total margin if we kill these 15 SKUs? What if we kill 10 and fix 5?" Sensitivity on velocity assumptions and cost allocation methodology.
-- **Cinderhaven case study** — HTML + PDF report walking through the full portfolio analysis, findings per product line, and the $110K/year savings opportunity.
+- **Excel financial model** — CFO-grade. Scenario analysis: "What happens to total margin if we kill these 19 SKUs? What if we kill 12 and fix 7?" Sensitivity on velocity assumptions and cost allocation methodology.
+- **Cinderhaven case study** — HTML + PDF report walking through the full portfolio analysis, findings per product line, and the prioritized kill list and savings opportunity.
 - **SQL diagnostic queries** — queries against the Cinderhaven Data Platform that produce the inputs for each dimension (velocity ranking, loaded contribution by SKU, shelf-space cost calculation, cannibalization detection).
 
 #### The Margin Math
@@ -131,9 +131,9 @@ For a $25M brand with 60–90 SKUs:
 
 #### Before / After
 
-- **Before:** CEO reviews the quarterly velocity report. Sees 15 SKUs below threshold. Asks: "Should we cut any?" Sales lead says "probably not — the buyer likes the assortment." CFO can't quantify the cost of keeping them. Nothing changes. Margin continues to erode. Next quarter, 18 SKUs are below threshold.
+- **Before:** CEO reviews the quarterly velocity report. Sees 19 SKUs below threshold. Asks: "Should we cut any?" Sales lead says "probably not — the buyer likes the assortment." CFO can't quantify the cost of keeping them. Nothing changes. Margin continues to erode. Next quarter, 22 SKUs are below threshold.
 
-- **After:** CEO opens the rationalization framework. Sees the four-quadrant view. The bottom 15 are clearly net-negative — $110K/year in loaded cost above their contribution. The "fix or kill" 15 each have a specific diagnosis and timeline. CEO tells sales lead: "We're cutting these 15 and fixing these 5. Here's the math for the buyer conversation." The buyer says "fine, we can use that shelf space." The brand's average velocity-per-SKU improves. Next category review goes better.
+- **After:** CEO opens the rationalization framework. Sees the four-quadrant view. The bottom 19 are clearly net-negative — their loaded cost exceeds their contribution. The "fix or kill" 14 each have a specific diagnosis and timeline. CEO tells sales lead: "We're cutting these 19 and fixing these 14. Here's the math for the buyer conversation." The buyer says "fine, we can use that shelf space." The brand's average velocity-per-SKU improves. Next category review goes better.
 
 #### Who Else Sees This?
 
@@ -167,8 +167,8 @@ For a $25M brand with 60–90 SKUs:
 | Deliverable | Format | Purpose |
 |------------|--------|---------|
 | Interactive rationalization tool | Streamlit, hosted | Prospect plays with it, sees their own portfolio scored |
-| Excel financial model | .xlsx download | CFO scenarios — "what if we kill these 15?" |
-| Cinderhaven case study | HTML + PDF | Proof — 90-SKU portfolio analyzed, $110K savings identified |
+| Excel financial model | .xlsx download | CFO scenarios — "what if we kill these 19?" |
+| Cinderhaven case study | HTML + PDF | Proof — 50-SKU portfolio analyzed, kill list identified |
 | SQL diagnostic queries | .sql files in repo | Platform query examples for each scoring dimension |
 | Scoring methodology doc | Markdown in repo | Transparency on how each dimension is scored and weighted |
 
@@ -238,9 +238,9 @@ New dbt models specific to this piece:
 
 ### 7. Marketing / Distribution
 
-- **Portfolio integration:** Cross-linked from the Velocity Decision Tool ("Want to go deeper on SKU rationalization? Here's the full framework."). Referenced in Where the Money's channel analysis ("Your Walmart contribution includes 15 SKUs that are individually net-negative").
+- **Portfolio integration:** Cross-linked from the Velocity Decision Tool ("Want to go deeper on SKU rationalization? Here's the full framework."). Referenced in Where the Money's channel analysis ("Your Walmart contribution includes SKUs that are individually net-negative").
 - **LinkedIn:**
-  - Launch post: "A $25M food brand's bottom 15 SKUs generate $180K in revenue and cost $290K to maintain. Here's the framework that finds them." Pair with the four-quadrant scatter plot.
+  - Launch post: "A $25M food brand's bottom 19 SKUs score net-negative on loaded margin — their cost to carry exceeds their contribution. Here's the framework that finds them." Pair with the four-quadrant scatter plot.
   - Follow-up: "The hardest conversation in specialty food isn't 'which retailer should we pursue?' It's 'which SKUs should we kill?'" The emotional angle.
 - **SEO:** "SKU rationalization specialty food," "which SKUs to cut food brand," "SKU portfolio optimization CPG," "product line rationalization framework," "SKU profitability analysis"
 - **Shareability:** The four-quadrant scatter plot (velocity vs margin, colored by recommendation) is the shareable visual. Brokers and sales leads share this with their CEO.
@@ -278,7 +278,7 @@ New dbt models specific to this piece:
   - `int_loaded_contribution_by_sku` — full per-SKU margin calculation
   - `int_shelf_space_cost_by_sku` — annual cost to maintain per retailer
   - `int_cannibalization_pairs` — cross-elasticity between SKU pairs
-- **90 SKUs analyzed.** The case study covers the full Cinderhaven portfolio. Findings by product line (Artisan Sauces, Specialty Condiments, Pantry Staples) add realism — the kill list doesn't just cluster in one line.
+- **50 SKUs analyzed.** The case study covers the full Cinderhaven portfolio. Findings by product line (Artisan Sauces, Pantry Staples, Specialty Condiments, Dried Goods, Snack Bites) add realism — the kill list doesn't just cluster in one line.
 - **Consistency:** SKU velocity data aligns with Velocity Decision Tool outputs. Loaded contribution aligns with Where the Money's channel analysis (if you sum SKU contributions by channel, they should match the channel-level numbers). Cross-portfolio consistency is the Cinderhaven Data Platform's job.
 
 ---
@@ -330,7 +330,7 @@ Secondary markers:
 | Scoring engine (5-dimension matrix, quadrant assignment) | Code | 1–2 days |
 | Streamlit interactive tool (upload, score, visualize, download) | Code | 3–4 days |
 | Excel financial model (scenarios, kill-list savings, sensitivity) | Code + design | 2–3 days |
-| Cinderhaven 90-SKU case study (run framework, write findings) | Code + writing | 2–3 days |
+| Cinderhaven 50-SKU case study (run framework, write findings) | Code + writing | 2–3 days |
 | Scatter plot + waterfall visuals | Code | 1 day |
 | Methodology documentation | Writing | 1 day |
 | Polish | Both | 2 days |
