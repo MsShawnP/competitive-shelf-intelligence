@@ -121,3 +121,5 @@ milestone is reached, or 90+ minutes have passed.
 - Default to flagging gaps rather than filling with unverified content.
 - Default to short responses unless the task is substantive.
 - Default to answering, not offering to answer.
+
+Never write secrets, tokens, or passwords into tracked files, READMEs, or commit messages — use environment variables and secret stores only.

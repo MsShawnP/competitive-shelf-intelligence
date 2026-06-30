@@ -55,3 +55,6 @@ Thumbs.db
 
 # Debug/admin scripts with potential hardcoded config
 scripts/_*.py
+
+# Security - secret leak prevention
+*.pem
