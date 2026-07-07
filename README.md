@@ -1,23 +1,18 @@
 # Competitive Shelf Intelligence
 
-Competitive pricing, promo, and out-of-stock monitoring for specialty food brands.
-Scrapes Walmart and Amazon to track price per oz, promotional activity, OOS events,
-assortment changes, and review trends across the artisan sauce/condiment category.
-Positions a synthetic Cinderhaven brand at the real category median price.
-
-Delivers the competitive visibility that syndicated data (IRI/Nielsen) provides —
-at a fraction of the cost.
+Competitive pricing, promo, and out-of-stock monitoring for specialty food brands — the visibility of syndicated data (IRI/Nielsen) at a fraction of the cost.
 
 **Live:** https://competitive.lailarallc.com
 
-## Data Contract
+## What it does
 
-**Cinderhaven canonical dataset:** 50 SKUs / 5 production lines / 6 retailers.
-**Scope:** This tool monitors competitive shelf positioning using Amazon as the competitive surface. It is not a full-catalog analysis of all Cinderhaven channels. Audits should not flag the single-channel focus as data drift.
+Scrapes Walmart and Amazon product pages to track price per oz, promotional activity, out-of-stock events, assortment changes, and review trends across the artisan sauce/condiment category, then serves the results in a Dash dashboard. A synthetic Cinderhaven brand (the fictional client used across the Lailara portfolio) is positioned at the real category median price so competitive gaps read at a glance.
 
-## Stack
+**Scope note:** the tool monitors competitive shelf positioning using Amazon and Walmart as the competitive surface. It is not a full-catalog analysis of all Cinderhaven channels; audits should not flag the single-channel focus as data drift. Canonical Cinderhaven dataset: 50 SKUs across 5 product lines and 6 contracted retailers.
 
-Python · Playwright · BeautifulSoup · Postgres · Dash · Plotly · Fly.io
+## Why it matters
+
+Syndicated data runs tens of thousands of dollars a year and reports with weeks of lag — out of reach and out of date for most specialty brands. Daily shelf monitoring answers the questions those brands actually have: Is a competitor undercutting us on price per oz? Who is running promos this week? How much revenue are we losing to out-of-stocks? Which SKUs quietly disappeared from the shelf? Each is a pricing, promo, or supply decision worth real money.
 
 ## Quick start
 
@@ -47,6 +42,12 @@ python scripts/load_synthetic.py
 
 # 7. Start the dashboard
 python app/run.py                  # dev server on localhost:8050
+```
+
+Tests (fixture-based — no live network calls, no database required):
+
+```bash
+python -m pytest
 ```
 
 ## Adding competitors
@@ -89,10 +90,7 @@ flyctl secrets set SCRAPERAPI_KEY=your_key_here
 flyctl deploy
 ```
 
-## Running scrapers in production
-
-The scraper is a CLI process, not part of the gunicorn app. SSH into the Fly machine
-or run via `flyctl ssh console`:
+The scraper is a CLI process, not part of the gunicorn app. Run it via `flyctl ssh console`:
 
 ```bash
 python scrape.py --retailer all
@@ -100,17 +98,9 @@ python scrape.py --retailer all
 
 Schedule with a cron job or Fly scheduled machines once you're happy with the data quality.
 
-## Data contract
+## Tech stack
 
-Canonical Cinderhaven conformance — 50 SKUs across 5 product lines and 6 contracted retailers.
-
-## Tests
-
-```bash
-python -m pytest
-```
-
-All tests are fixture-based — no live network calls, no database required.
+Python · Playwright · BeautifulSoup · Postgres · Dash · Plotly · Fly.io
 
 ## Project structure
 
@@ -124,13 +114,17 @@ src/
     base.py                Rate limiting, robots.txt, block detection
     walmart.py             Walmart scraper (ScraperAPI + __NEXT_DATA__ JSON)
     amazon.py              Amazon scraper (CSS fallback chain)
-    entity_resolution.py   UPC → canonical product mapping
+    entity_resolution.py   UPC -> canonical product mapping
   db.py                    DB connection pool
   utils.py                 parse_weight_oz()
 app/
   run.py                   Dash entry point (gunicorn: app.run:server)
   tabs/                    One module per dashboard tab
 ```
+
+## License
+
+MIT — see [LICENSE](LICENSE).
 
 ---
 
