@@ -38,7 +38,7 @@ app.layout = wrap(
     create_layout(),
     tool_name="Competitive Shelf Intelligence",
     no_container=True,
-    footer_note="Data: publicly available product pages from Walmart, Amazon, and Instacart.",
+    footer_note="Data: demonstration dataset modeled on public Walmart and Amazon product pages.",
 )
 register_callbacks(app)
 

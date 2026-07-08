@@ -3,7 +3,7 @@
 ## What this project is
 
 Competitive pricing, promo, and out-of-stock monitoring for specialty food
-brands. Scrapes publicly available data from Walmart, Amazon, and Instacart
+brands. Scrapes publicly available data from Walmart and Amazon
 to give $5M–$20M brands the competitive visibility they can't afford from
 syndicated data (IRI/Nielsen). Delivers a Streamlit dashboard showing price
 positioning, promotional calendars, OOS events, and review trends. Proves
