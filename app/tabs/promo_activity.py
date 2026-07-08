@@ -8,7 +8,7 @@ import dash_ag_grid as dag
 from dash import Input, Output, dcc, html
 
 from app.charts import base_chart_layout
-from app.components import date_range_toggles, empty_state, last_scraped_indicator, register_date_range_callbacks
+from app.components import chart_footnote, date_range_toggles, empty_state, last_scraped_indicator, register_date_range_callbacks
 from app.constants import (
     CANVAS, COLOR_PROMO, DATE_RANGE_DEFAULT, DATE_RANGE_OPTIONS,
     FONT_SANS, FONT_SERIF, GREY_LIGHT, INK, TEXT_SEC,
@@ -38,6 +38,10 @@ def layout() -> html.Div:
                        "fontSize": "16px", "marginTop": "24px", "marginBottom": "8px"},
             ),
             html.Div(id=SUMMARY_ID),
+            chart_footnote(
+                "Source: demonstration dataset (Walmart and Amazon). Promo depth = "
+                "(regular price − promotional price) ÷ regular price."
+            ),
         ], style={
             "backgroundColor": "#ffffff",
             "border": f"1px solid {GREY_LIGHT}",

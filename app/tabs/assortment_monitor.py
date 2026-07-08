@@ -6,7 +6,7 @@ import pandas as pd
 import dash_ag_grid as dag
 from dash import Input, Output, html
 
-from app.components import empty_state, last_scraped_indicator
+from app.components import chart_footnote, empty_state, last_scraped_indicator
 from app.constants import FONT_SANS, FONT_SERIF, GREY_LIGHT, RED, TEXT_SEC, TEAL
 from app.data import get_assortment_changes
 
@@ -24,7 +24,13 @@ def layout() -> html.Div:
             style={"fontSize": "14px", "color": TEXT_SEC, "marginBottom": "0"},
         ),
         html.Div(
-            html.Div(id=TABLE_ID),
+            [
+                html.Div(id=TABLE_ID),
+                chart_footnote(
+                    "Source: demonstration dataset (Walmart and Amazon). New-entry "
+                    "and delist rows are staged illustrative examples, not live detections."
+                ),
+            ],
             style={
                 "backgroundColor": "#ffffff",
                 "border": f"1px solid {GREY_LIGHT}",

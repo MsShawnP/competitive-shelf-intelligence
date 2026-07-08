@@ -8,7 +8,7 @@ import dash_bootstrap_components as dbc
 from dash import ALL, Input, Output, State, callback_context, dcc, html, no_update
 
 from app.charts import base_chart_layout
-from app.components import date_range_toggles, empty_state, last_scraped_indicator, register_date_range_callbacks
+from app.components import chart_footnote, date_range_toggles, empty_state, last_scraped_indicator, register_date_range_callbacks
 from app.constants import (
     CANVAS, CHART_PALETTE, CHICAGO, DATE_RANGE_DEFAULT, DATE_RANGE_OPTIONS,
     FONT_SANS, FONT_SERIF, GREY_LIGHT, INK, OWN_BRAND, TEXT_SEC,
@@ -31,6 +31,10 @@ def layout() -> html.Div:
         html.Div([
             date_range_toggles("review"),
             html.Div(id=CONTAINER_ID),
+            chart_footnote(
+                "Source: demonstration dataset (Walmart and Amazon). Star ratings "
+                "and review counts by scrape date."
+            ),
         ], style={
             "backgroundColor": "#ffffff",
             "border": f"1px solid {GREY_LIGHT}",
@@ -206,8 +210,8 @@ def _build_charts(df: pd.DataFrame) -> html.Div:
                 id={"type": "review-comp-card", "index": brand},
                 n_clicks=0,
                 style={
-                    "backgroundColor": "#faf9f6",
-                    "border": "1px solid #e8e6e1",
+                    "backgroundColor": CANVAS,
+                    "border": f"1px solid {GREY_LIGHT}",
                     "borderRadius": "2px",
                     "padding": "10px 10px 2px",
                     "overflow": "hidden",

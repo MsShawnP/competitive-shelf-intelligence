@@ -11,7 +11,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, dcc, html
 
 from app.charts import base_chart_layout
-from app.components import last_scraped_indicator
+from app.components import chart_footnote, last_scraped_indicator
 from app.constants import (
     COLOR_AMAZON,
     COLOR_WALMART,
@@ -37,7 +37,14 @@ def layout() -> html.Div:
             style={"fontSize": "14px", "color": TEXT_SEC, "marginBottom": "0"},
         ),
         html.Div(
-            dcc.Graph(id=GRAPH_ID, config={"displayModeBar": False}),
+            [
+                dcc.Graph(id=GRAPH_ID, config={"displayModeBar": False}),
+                chart_footnote(
+                    "Source: demonstration dataset modeled on public Walmart and "
+                    "Amazon product pages. Bars show each listing's regular "
+                    "(non-promotional) price per ounce."
+                ),
+            ],
             style={
                 "backgroundColor": "#ffffff",
                 "border": f"1px solid {GREY_LIGHT}",

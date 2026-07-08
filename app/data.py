@@ -213,8 +213,16 @@ def get_oos_events(days: int = 30) -> pd.DataFrame:
 
 
 @cache.memoize(timeout=3600)
-def get_cinderhaven_oos_days(days: int = 30) -> int:
-    """Count of OOS days for Cinderhaven in the date window."""
+def get_cinderhaven_oos_exposure(days: int = 30) -> dict:
+    """Own-brand OOS exposure, prorated by SKU share.
+
+    A single-SKU stockout costs only that SKU's share of daily brand revenue,
+    not a full day of whole-brand revenue. Returns:
+      - oos_days: distinct calendar days with at least one own-brand listing OOS.
+      - sku_day_fraction: summed over the window, (own-brand listings OOS that
+        day / total own-brand listings). Multiply daily brand revenue by this to
+        estimate lost revenue instead of charging a whole day per single-SKU OOS.
+    """
     from app.db import get_conn
     cutoff = _date_cutoff(days)
     try:
@@ -222,22 +230,33 @@ def get_cinderhaven_oos_days(days: int = 30) -> int:
             cur = conn.cursor()
             cur.execute(
                 """
-                SELECT COUNT(DISTINCT ps.scraped_date)
-                FROM price_snapshots ps
-                JOIN retailer_listings rl ON rl.id = ps.listing_id
-                JOIN products p ON p.id = rl.product_id
-                JOIN brands b ON b.id = p.brand_id
-                WHERE b.canonical_name = %s
-                  AND ps.is_oos = TRUE
-                  AND (%s::date IS NULL OR ps.scraped_date >= %s)
+                WITH own AS (
+                    SELECT ps.scraped_date, ps.listing_id, ps.is_oos
+                    FROM price_snapshots ps
+                    JOIN retailer_listings rl ON rl.id = ps.listing_id
+                    JOIN products p ON p.id = rl.product_id
+                    JOIN brands b ON b.id = p.brand_id
+                    WHERE b.canonical_name = %s
+                      AND (%s::date IS NULL OR ps.scraped_date >= %s)
+                )
+                SELECT
+                    COUNT(DISTINCT CASE WHEN is_oos THEN scraped_date END) AS oos_days,
+                    COALESCE(
+                        SUM(CASE WHEN is_oos THEN 1.0 ELSE 0 END)
+                        / NULLIF(COUNT(DISTINCT listing_id), 0),
+                        0
+                    ) AS sku_day_fraction
+                FROM own
                 """,
                 [OWN_BRAND, cutoff, cutoff],
             )
             row = cur.fetchone()
-            return int(row[0]) if row else 0
+            if not row:
+                return {"oos_days": 0, "sku_day_fraction": 0.0}
+            return {"oos_days": int(row[0] or 0), "sku_day_fraction": float(row[1] or 0.0)}
     except Exception:
-        logger.exception("get_cinderhaven_oos_days failed")
-        return 0
+        logger.exception("get_cinderhaven_oos_exposure failed")
+        return {"oos_days": 0, "sku_day_fraction": 0.0}
 
 
 # ------------------------------------------------------------------

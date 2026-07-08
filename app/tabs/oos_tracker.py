@@ -9,14 +9,14 @@ import plotly.graph_objects as go
 from dash import Input, Output, dcc, html
 
 from app.charts import base_chart_layout
-from app.components import date_range_toggles, empty_state, last_scraped_indicator, register_date_range_callbacks
+from app.components import chart_footnote, date_range_toggles, empty_state, last_scraped_indicator, register_date_range_callbacks
 from app.constants import (
     CANVAS, COLOR_OOS, DATE_RANGE_DEFAULT, DATE_RANGE_OPTIONS,
     FONT_SANS, FONT_SERIF, GREY_LIGHT, INK, OWN_BRAND, RED, TEXT_SEC,
 )
 
 _ALLOWED_DAYS = frozenset(o["value"] for o in DATE_RANGE_OPTIONS)
-from app.data import get_cinderhaven_oos_days, get_oos_events
+from app.data import get_cinderhaven_oos_exposure, get_oos_events
 
 TAB_ID = "tab-oos-tracker"
 HEATMAP_ID = "oos-heatmap"
@@ -34,6 +34,11 @@ def layout() -> html.Div:
             date_range_toggles("oos"),
             html.Div(id=CALLOUT_ID),
             dcc.Graph(id=HEATMAP_ID, config={"displayModeBar": False}),
+            chart_footnote(
+                "Source: demonstration dataset (Walmart and Amazon). A filled cell "
+                "marks a day a listing was recorded out of stock. Estimated lost "
+                "revenue is prorated by the share of the brand's SKUs out of stock."
+            ),
         ], style={
             "backgroundColor": "#ffffff",
             "border": f"1px solid {GREY_LIGHT}",
@@ -101,8 +106,11 @@ def _build_callout(days: int) -> html.Div:
     if daily_rate <= 0:
         return html.Div()
 
-    oos_days = get_cinderhaven_oos_days(days)
-    lost = daily_rate * oos_days
+    exposure = get_cinderhaven_oos_exposure(days)
+    oos_days = exposure["oos_days"]
+    # Prorate by SKU share: a single-SKU stockout costs that SKU's share of daily
+    # brand revenue, not a whole day of the entire brand's revenue.
+    lost = daily_rate * exposure["sku_day_fraction"]
 
     return html.Div(
         html.Div(
@@ -119,7 +127,8 @@ def _build_callout(days: int) -> html.Div:
                     },
                 ),
                 html.Span(
-                    f"over {oos_days} OOS day{'s' if oos_days != 1 else ''}",
+                    f"over {oos_days} OOS day{'s' if oos_days != 1 else ''}, "
+                    "prorated by SKU share",
                     style={"fontSize": "13px", "color": TEXT_SEC},
                 ),
             ],

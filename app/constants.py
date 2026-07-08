@@ -40,7 +40,7 @@ HK_LIGHT    = "#6dcdb5"   # HK-70
 # ============================================================
 COLOR_WALMART = CHICAGO     # Chicago-20 navy
 COLOR_AMAZON  = TEAL        # HK-35 teal
-COLOR_OOS     = RED         # out-of-stock cells
+COLOR_OOS     = "#ee8880"   # Red-70 tint — OOS heatmap fill (red #cc100a is ink, never a fill)
 COLOR_PROMO   = "#ee8a2a"   # SG-55 orange — promo events
 
 # ============================================================

@@ -9,9 +9,27 @@ import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback_context, dcc, html
 
 from app.constants import (
-    CHICAGO, DATE_RANGE_DEFAULT, DATE_RANGE_OPTIONS,
+    CANVAS, CHICAGO, DATE_RANGE_DEFAULT, DATE_RANGE_OPTIONS,
     FONT_SANS, GREY_LIGHT, RED, TEXT, TEXT_SEC,
 )
+
+
+def chart_footnote(text: str) -> html.Div:
+    """Source / methodology footnote placed under a chart.
+
+    The design system requires a footnote under every chart. The "as of" scrape
+    date is shown separately by last_scraped_indicator at the top of each tab.
+    """
+    return html.Div(
+        text,
+        style={
+            "fontFamily": FONT_SANS,
+            "fontSize": "11px",
+            "fontStyle": "italic",
+            "color": TEXT_SEC,
+            "marginTop": "12px",
+        },
+    )
 
 
 def demo_data_banner() -> html.Div:
@@ -117,7 +135,7 @@ def empty_state(message: str) -> html.Div:
             "padding": "60px 20px",
             "border": f"1px dashed {GREY_LIGHT}",
             "borderRadius": "2px",
-            "backgroundColor": "#faf9f6",
+            "backgroundColor": CANVAS,
         },
     )
 
