@@ -34,10 +34,13 @@ def test_extracts_price_from_primary_selector(scraper):
 
 
 def test_extracts_price_from_fallback_selector_when_primary_absent(scraper):
-    # product_on_sale.html has .a-price .a-offscreen but no #priceblock_ourprice
+    # product_on_sale.html has .a-price .a-offscreen but no #priceblock_ourprice.
+    # The now/sale price ($17.88) comes from .a-price .a-offscreen and is stored
+    # as sale_price; the struck-through was-price ($21.99) becomes current_price.
     html = _load("product_on_sale.html")
     p = scraper.parse_html(html, _URL_TEMPLATE.format(asin="B08XXXXXXX2"), "B08XXXXXXX2")
-    assert p.current_price == pytest.approx(17.88)
+    assert p.sale_price == pytest.approx(17.88)
+    assert p.current_price == pytest.approx(21.99)
 
 
 def test_extracts_price_from_third_fallback(scraper):
@@ -67,7 +70,11 @@ def test_detects_sale_when_strikethrough_price_present(scraper):
     html = _load("product_on_sale.html")
     p = scraper.parse_html(html, _URL_TEMPLATE.format(asin="B08XXXXXXX2"), "B08XXXXXXX2")
     assert p.has_promo_badge is True
-    assert p.sale_price == pytest.approx(17.88)
+    assert p.current_price == pytest.approx(21.99)  # regular / was
+    assert p.sale_price == pytest.approx(17.88)     # promotional / now
+    # Promo depth = (regular - sale) / regular must be positive and sensible
+    depth = (p.current_price - p.sale_price) / p.current_price * 100
+    assert depth == pytest.approx(18.69, abs=0.1)
 
 
 def test_no_promo_when_no_strikethrough(scraper):

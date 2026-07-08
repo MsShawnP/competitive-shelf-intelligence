@@ -76,11 +76,20 @@ def test_detects_promo_when_is_price_reduced_true(scraper):
     assert product.has_promo_badge is True
 
 
-def test_extracts_was_price_when_on_sale(scraper):
+def test_normalizes_regular_and_sale_price_when_on_sale(scraper):
+    """Regular (higher) price -> current_price (price_cents);
+    promotional (lower) price -> sale_price (sale_price_cents).
+
+    Storing the higher was-price as sale_price made promo depth negative;
+    this asserts the normalized convention so depth stays positive.
+    """
     html = _load("product_on_sale.html")
     product = scraper.parse_html(html, "https://www.walmart.com/ip/test/222", "222")
-    assert product.sale_price == pytest.approx(21.99)
-    assert product.current_price == pytest.approx(17.88)
+    assert product.current_price == pytest.approx(21.99)  # regular / was
+    assert product.sale_price == pytest.approx(17.88)     # promotional / now
+    # Promo depth = (regular - sale) / regular must be positive and sensible
+    depth = (product.current_price - product.sale_price) / product.current_price * 100
+    assert depth == pytest.approx(18.69, abs=0.1)
 
 
 def test_extracts_sale_badge_text(scraper):

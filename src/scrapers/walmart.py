@@ -329,8 +329,20 @@ class WalmartScraper(BaseProductScraper):
         if current_price is None:
             raise ParseFailureError(f"Price not found in __NEXT_DATA__ at {url}")
 
+        # Normalize prices for the DB convention: the regular (higher) price
+        # maps to price_cents and the promotional (lower) price to
+        # sale_price_cents. Walmart's currentPrice is the now/sale price and
+        # wasPrice is the original list price, so the higher value is wasPrice.
+        # Storing wasPrice as the sale price made promo depth go negative
+        # (e.g. $8.97 now / $11.98 was -> -33.6%); flip them here.
         was = price_info.get("wasPrice") or {}
-        sale_price = was.get("price")
+        was_price = was.get("price")
+        if was_price is not None and was_price > current_price:
+            regular_price = was_price
+            promo_price = current_price
+        else:
+            regular_price = current_price
+            promo_price = None
 
         # Promo badge signal (R3-a)
         has_promo_badge = bool(price_info.get("isPriceReduced", False)) or bool(
@@ -360,8 +372,8 @@ class WalmartScraper(BaseProductScraper):
             retailer="walmart",
             retailer_id=retailer_id,
             product_name=str(name),
-            current_price=float(current_price),
-            sale_price=float(sale_price) if sale_price is not None else None,
+            current_price=float(regular_price),
+            sale_price=float(promo_price) if promo_price is not None else None,
             has_promo_badge=has_promo_badge,
             sale_badge_text=str(sale_badge_text) if sale_badge_text else None,
             is_oos=is_oos,

@@ -101,8 +101,21 @@ class AmazonScraper(BaseProductScraper):
 
         asin = self._extract_asin(url)
         product_name = self._extract_product_name(soup, url)
-        current_price = self._extract_price(soup, url)
-        sale_price = self._extract_sale_price(soup, current_price)
+        now_price = self._extract_price(soup, url)
+        was_price = self._extract_was_price(soup, now_price)
+        # Normalize for the DB convention: regular (higher) price -> price_cents,
+        # promotional (lower) price -> sale_price_cents. Amazon's displayed price
+        # is the now/sale price; the struck-through value is the original 'was'
+        # price. Previously sale_price was set to the now price, so price_cents
+        # and sale_price_cents were equal and promo depth was always 0%.
+        if was_price is not None:
+            regular_price = was_price
+            promo_price = now_price
+        else:
+            regular_price = now_price
+            promo_price = None
+        current_price = regular_price
+        sale_price = promo_price
         has_promo_badge = sale_price is not None
         is_oos, oos_signal = self._detect_oos(soup)
         star_rating = self._extract_star_rating(soup)
@@ -166,18 +179,18 @@ class AmazonScraper(BaseProductScraper):
             f"Tried: {[s for s, _, _ in _PRICE_SELECTORS]}"
         )
 
-    def _extract_sale_price(
+    def _extract_was_price(
         self,
         soup: BeautifulSoup,
         current_price: Optional[float],
     ) -> Optional[float]:
-        """Detect sale pricing via a strikethrough 'was' price element.
+        """Return the struck-through original ('was') price when a sale is active.
 
-        Amazon shows the original price in .a-text-strike when a sale is active.
-        If present alongside the current price, the current price IS the sale price.
-        We store it as sale_price (the lower value) and treat the struck-through
-        price as the 'was' price — but we only return the lower current_price here;
-        the CLI uses this to set has_promo_badge.
+        Amazon shows the original price in .a-text-strike when a sale is active,
+        alongside the lower current (sale) price. This returns that higher 'was'
+        value so the caller can store it as the regular price (price_cents) and
+        keep the current price as the sale price (sale_price_cents). Returns None
+        when there is no genuine markdown.
         """
         strike = soup.select_one(".a-text-strike")
         if not strike:
@@ -186,7 +199,7 @@ class AmazonScraper(BaseProductScraper):
         raw = strike.get_text(strip=True)
         was_price = _parse_price_string(raw)
         if was_price and current_price and was_price > current_price:
-            return current_price  # current price IS the sale price
+            return was_price
         return None
 
     def _detect_oos(self, soup: BeautifulSoup) -> tuple[bool, Optional[str]]:
