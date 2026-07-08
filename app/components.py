@@ -10,8 +10,41 @@ from dash import Input, Output, State, callback_context, dcc, html
 
 from app.constants import (
     CHICAGO, DATE_RANGE_DEFAULT, DATE_RANGE_OPTIONS,
-    FONT_SANS, GREY_LIGHT, RED, TEXT_SEC,
+    FONT_SANS, GREY_LIGHT, RED, TEXT, TEXT_SEC,
 )
+
+
+def demo_data_banner() -> html.Div:
+    """Visible disclosure that the dashboard runs on a demonstration dataset.
+
+    Competitor prices, promotions, out-of-stock events, and the staged
+    assortment changes are synthetic — modeled on public product pages, not
+    live scraped figures. Shown on every tab so no reader mistakes the demo
+    for live competitive data.
+    """
+    return html.Div(
+        [
+            html.Span(
+                "Demonstration data",
+                style={"fontWeight": "700", "color": CHICAGO, "marginRight": "8px"},
+            ),
+            html.Span(
+                "Competitor prices, promotions, out-of-stock events, and "
+                "assortment changes shown here are a synthetic dataset modeled on "
+                "public Walmart and Amazon product pages — not live scraped figures.",
+                style={"color": TEXT},
+            ),
+        ],
+        style={
+            "backgroundColor": "#e8eaf4",   # Chicago-95 info surface
+            "border": "1px solid #8e9ad0",  # Chicago-70
+            "borderRadius": "2px",
+            "padding": "10px 16px",
+            "fontSize": "13px",
+            "fontFamily": FONT_SANS,
+            "margin": "16px 0 0",
+        },
+    )
 
 
 def metric_card(label: str, value: str, delta: str | None = None) -> html.Div:

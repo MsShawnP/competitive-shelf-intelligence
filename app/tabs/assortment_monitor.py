@@ -18,7 +18,9 @@ def layout() -> html.Div:
     return html.Div([
         last_scraped_indicator(),
         html.P(
-            "Products appearing or disappearing between the two most recent scrape runs.",
+            "New-entry and delist examples staged in the demonstration dataset. "
+            "In production this compares each listing's presence across the two "
+            "most recent scrape runs.",
             style={"fontSize": "14px", "color": TEXT_SEC, "marginBottom": "0"},
         ),
         html.Div(
@@ -42,7 +44,7 @@ def register_callbacks(app) -> None:
     def update(_):
         df = get_assortment_changes()
         if df.empty:
-            return empty_state("No assortment changes detected, or fewer than two scrape runs available.")
+            return empty_state("No staged assortment changes, or fewer than two scrape runs available.")
         return _build_table(df)
 
 

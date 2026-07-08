@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dash import dcc, html
 
+from app.components import demo_data_banner
 from app.constants import CANVAS, CHICAGO, FONT_SANS, FONT_SERIF, GREY_LIGHT, INK, TEXT_SEC, WHITE
 from app.tabs import (
     assortment_monitor,
@@ -74,6 +75,9 @@ def create_layout() -> html.Div:
                             "borderBottom": f"1px solid {GREY_LIGHT}",
                         },
                     ),
+
+                    # Demonstration-data disclosure (shown above all tabs)
+                    demo_data_banner(),
 
                     # Tab navigation
                     html.Div(
