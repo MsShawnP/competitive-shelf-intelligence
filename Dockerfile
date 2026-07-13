@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM mcr.microsoft.com/playwright/python:v1.60.0-noble
 
 # playwright chromium + system deps are pre-installed in this image
@@ -6,8 +7,19 @@ FROM mcr.microsoft.com/playwright/python:v1.60.0-noble
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt && \
-    python -m camoufox fetch
+# Authenticate camoufox's GitHub release fetch to avoid api.github.com's
+# 60/hr unauthenticated rate limit on the CI builder IP. camoufox's pkgman
+# uses a plain requests.get (no token support), so credentials are supplied
+# via ~/.netrc (which requests honors) from a build-time secret, then removed
+# within the same layer so no token is baked into the image.
+RUN --mount=type=secret,id=github_token \
+    pip install --no-cache-dir -r requirements.txt && \
+    if [ -s /run/secrets/github_token ]; then \
+      printf 'machine api.github.com\n  login %s\n  password x-oauth-basic\n' "$(cat /run/secrets/github_token)" > ~/.netrc && \
+      chmod 600 ~/.netrc; \
+    fi && \
+    python -m camoufox fetch && \
+    rm -f ~/.netrc
 
 COPY . .
 
