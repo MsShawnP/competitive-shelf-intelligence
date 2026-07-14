@@ -36,7 +36,7 @@ def layout() -> html.Div:
                 "and review counts by scrape date."
             ),
         ], style={
-            "backgroundColor": "#ffffff",
+            "backgroundColor": CANVAS,
             "border": f"1px solid {GREY_LIGHT}",
             "borderRadius": "2px",
             "padding": "24px",
@@ -163,7 +163,7 @@ def _build_charts(df: pd.DataFrame) -> html.Div:
                 id={"type": "review-comp-card", "index": OWN_BRAND},
                 n_clicks=0,
                 style={
-                    "backgroundColor": "#ffffff",
+                    "backgroundColor": CANVAS,
                     "border": f"1px solid {GREY_LIGHT}",
                     "borderLeft": f"4px solid {CHICAGO}",
                     "borderRadius": "2px",

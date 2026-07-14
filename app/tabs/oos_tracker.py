@@ -40,7 +40,7 @@ def layout() -> html.Div:
                 "revenue is prorated by the share of the brand's SKUs out of stock."
             ),
         ], style={
-            "backgroundColor": "#ffffff",
+            "backgroundColor": CANVAS,
             "border": f"1px solid {GREY_LIGHT}",
             "borderRadius": "2px",
             "padding": "24px",
@@ -133,7 +133,7 @@ def _build_callout(days: int) -> html.Div:
                 ),
             ],
             style={
-                "backgroundColor": "#ffffff",
+                "backgroundColor": CANVAS,
                 "border": f"1px solid {GREY_LIGHT}",
                 "borderLeft": f"4px solid {RED}",
                 "borderRadius": "2px",

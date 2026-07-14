@@ -43,7 +43,7 @@ def layout() -> html.Div:
                 "(regular price − promotional price) ÷ regular price."
             ),
         ], style={
-            "backgroundColor": "#ffffff",
+            "backgroundColor": CANVAS,
             "border": f"1px solid {GREY_LIGHT}",
             "borderRadius": "2px",
             "padding": "24px",

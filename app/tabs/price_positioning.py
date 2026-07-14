@@ -13,6 +13,7 @@ from dash import Input, Output, dcc, html
 from app.charts import base_chart_layout
 from app.components import chart_footnote, last_scraped_indicator
 from app.constants import (
+    CANVAS,
     COLOR_AMAZON,
     COLOR_WALMART,
     FONT_SANS,
@@ -46,7 +47,7 @@ def layout() -> html.Div:
                 ),
             ],
             style={
-                "backgroundColor": "#ffffff",
+                "backgroundColor": CANVAS,
                 "border": f"1px solid {GREY_LIGHT}",
                 "borderRadius": "2px",
                 "padding": "24px",
@@ -108,8 +109,8 @@ def _build_figure(df: pd.DataFrame) -> go.Figure:
             else:
                 x_vals.append(None)
                 text_vals.append("")
-            line_colors.append("rgba(0,0,0,0)")
-            line_widths.append(0)
+            line_colors.append(INK if is_own else "rgba(0,0,0,0)")
+            line_widths.append(2 if is_own else 0)
 
         fig.add_trace(go.Bar(
             x=x_vals,

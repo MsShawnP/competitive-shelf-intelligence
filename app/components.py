@@ -75,7 +75,7 @@ def metric_card(label: str, value: str, delta: str | None = None) -> html.Div:
     return html.Div(
         children,
         style={
-            "background": "#ffffff",
+            "background": CANVAS,
             "border": f"1px solid {GREY_LIGHT}",
             "borderRadius": "2px",
             "padding": "16px 20px",
@@ -148,7 +148,7 @@ def _toggle_btn_style(selected: bool) -> dict:
         "padding": "4px 12px",
         "borderRadius": "2px",
         "border": f"1px solid {CHICAGO if selected else GREY_LIGHT}",
-        "backgroundColor": CHICAGO if selected else "#ffffff",
+        "backgroundColor": CHICAGO if selected else CANVAS,
         "color": "#ffffff" if selected else TEXT_SEC,
         "cursor": "pointer",
         "outline": "none",

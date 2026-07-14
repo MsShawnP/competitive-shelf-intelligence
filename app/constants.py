@@ -65,11 +65,13 @@ OWN_BRAND = "Cinderhaven"
 
 CHART_PALETTE = [
     "#1f2e7a",  # Chicago-20
-    "#0c6552",  # HK-20
-    "#7e1f34",  # Tokyo-20
-    "#7a3d10",  # SG-20
-    "#8e0b07",  # Red-20
     "#8e9ad0",  # Chicago-70
+    "#0c6552",  # HK-20
     "#6dcdb5",  # HK-70
+    "#7e1f34",  # Tokyo-20
     "#e68a9a",  # Tokyo-70
+    "#7a3d10",  # SG-20
+    "#f6b97c",  # SG-70
+    "#8e0b07",  # Red-20
+    "#ee8880",  # Red-70
 ]
