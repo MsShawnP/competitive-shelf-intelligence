@@ -38,11 +38,41 @@ def init_cache(server) -> None:
         })
 
 
-def _date_cutoff(days: int) -> Optional[date]:
-    """Return the earliest scrape_date to include, or None for all history."""
+@cache.memoize(timeout=3600)
+def _max_scraped_date() -> Optional[date]:
+    """The most recent scraped_date present in the data.
+
+    Date filters anchor to this, not to the wall clock. Anchoring to today
+    means every window silently empties as the dataset ages: the scrape data
+    ends 2026-06-23, so on 2026-07-29 a 30-day window excluded 100% of rows
+    and the Promotions, Out-of-Stock and Review Trends tabs all rendered
+    empty states on first load with no error.
+    """
+    from app.db import get_conn
+    try:
+        with get_conn() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT MAX(scraped_date) FROM price_snapshots")
+            row = cur.fetchone()
+            return row[0] if row and row[0] else None
+    except Exception:
+        logger.exception("_max_scraped_date failed")
+        return None
+
+
+def _date_cutoff(days: int, anchor: Optional[date] = None) -> Optional[date]:
+    """Return the earliest scraped_date to include, or None for all history.
+
+    `anchor` is the end of the window. It defaults to the newest scraped_date
+    in the data, falling back to today only when the table is empty or
+    unreachable. Pass it explicitly to make the calculation testable without
+    a database.
+    """
     if days <= 0:
         return None
-    return date.today() - timedelta(days=days)
+    if anchor is None:
+        anchor = _max_scraped_date() or date.today()
+    return anchor - timedelta(days=days)
 
 
 # ------------------------------------------------------------------
