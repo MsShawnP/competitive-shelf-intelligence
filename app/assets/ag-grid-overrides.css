@@ -11,7 +11,7 @@
   --ag-cell-horizontal-padding: 8px;
   --ag-header-column-separator-display: none;
   --ag-borders: none;
-  --ag-row-hover-color: #f0ede6;
+  --ag-row-hover-color: #e8eaf4;  /* Chicago-95 — DS table row hover */
 }
 
 .ag-theme-alpine .ag-header-cell {
