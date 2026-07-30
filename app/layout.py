@@ -5,7 +5,7 @@ from __future__ import annotations
 from dash import dcc, html
 
 from app.components import demo_data_banner
-from app.constants import CANVAS, CHICAGO, FONT_SANS, FONT_SERIF, GREY_LIGHT, INK, TEXT_SEC
+from app.constants import CANVAS, CHICAGO, FONT_SANS, FONT_SERIF, GREY_LIGHT, INK, TEXT, TEXT_SEC
 from app.tabs import (
     assortment_monitor,
     oos_tracker,
@@ -56,6 +56,22 @@ def create_layout() -> html.Div:
                                     "fontSize": "26px",
                                     "color": INK,
                                     "margin": "0 0 4px 0",
+                                },
+                            ),
+                            html.P(
+                                "Every day a competitor undercuts your price per ounce, "
+                                "runs a promo you never saw, or your item sits out of "
+                                "stock, money moves off your shelf. This tool watches "
+                                "the shelf for you — price position, promo activity, "
+                                "out-of-stocks, assortment gaps, and review momentum, "
+                                "scraped on a schedule and ranked by what to act on.",
+                                style={
+                                    "fontFamily": FONT_SANS,
+                                    "fontSize": "17px",
+                                    "lineHeight": "1.6",
+                                    "color": TEXT,
+                                    "maxWidth": "660px",
+                                    "margin": "0 0 6px",
                                 },
                             ),
                             html.P(
