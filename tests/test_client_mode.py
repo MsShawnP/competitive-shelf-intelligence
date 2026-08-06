@@ -84,6 +84,35 @@ def test_clean_run_price_positioning_and_oos(tmp_path):
     assert "client-collected" in html.lower()               # provenance shown
 
 
+def test_observation_window_tracks_observed_dates_not_a_hardcode(tmp_path):
+    """The rendered observation window must be the ACTUAL observed-date span and
+    move with the data. The suite asserted price/OOS numbers and the observation
+    count, never the window text — a hardcoded span matching the demo would pass,
+    the failure mode behind trade-spend quoting 26 weeks as 'trailing 52 weeks'.
+
+    Both halves: assert each distinct span renders, AND assert the other span (a
+    stand-in for a hardcode) is absent."""
+    hdr = "retailer,brand,product,price,pack_weight_oz,observed_date,in_stock\n"
+    src_a = _write(tmp_path, "a.csv", hdr +
+                   "Walmart,Meridian,Marinara,5.98,24,2026-01-10,true\n"
+                   "Walmart,Competitor Co,Marinara,8.48,24,2026-01-20,true\n")
+    res_a = client_mode.run(_cfg(tmp_path), src_a, str(tmp_path / "out_a"))
+    html_a = open(res_a["report"], encoding="utf-8").read()
+    assert "2026-01-10 to 2026-01-20" in html_a
+    assert "2025-03-05" not in html_a
+
+    src_b = _write(tmp_path, "b.csv", hdr +
+                   "Walmart,Meridian,Marinara,5.98,24,2025-03-05,true\n")
+    res_b = client_mode.run(_cfg(tmp_path), src_b, str(tmp_path / "out_b"))
+    html_b = open(res_b["report"], encoding="utf-8").read()
+    assert "2025-03-05 to 2025-03-05" in html_b
+    assert "2026-01-10 to 2026-01-20" not in html_b        # not fixed to span A
+
+    for html in (html_a, html_b):
+        low = html.lower()
+        assert "trailing" not in low and "52-week" not in low and "365d" not in low
+
+
 def test_missing_provenance_blocks(tmp_path):
     # Honest provenance is mandatory — no synthetic-presented-as-scraped.
     src = _write(tmp_path, "s.csv", _CLEAN)
